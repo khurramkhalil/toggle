@@ -1,7 +1,7 @@
 """
-Bayesian Optimization for TOGGLE compression configurations
-This module provides gradient-free optimization to find optimal bit-width
-and pruning configurations that satisfy STL constraints while minimizing model size.
+Improved Bayesian Optimization for TOGGLE compression configurations
+This updated version uses a more effective objective function, better exploration,
+and more flexible handling of configurations.
 """
 
 import numpy as np
@@ -44,35 +44,97 @@ class BayesianOptimization:
         self.y = []  # Evaluation results (STL score, model size)
         
         # Initial configs
-        self.init_configs = init_configs or []
+        self.init_configs = init_configs or self.create_initial_configs()
         
         # Set up GP hyperparameters
         self.noise = 0.1
         self.length_scale = 1.0
         self.signal_variance = 1.0
     
+    def create_initial_configs(self):
+        """Create a diverse set of initial configurations to explore"""
+        configs = []
+        
+        # Add a uniform 8-bit config
+        uniform_8bit = {}
+        for layer_idx in range(self.num_layers):
+            layer_key = f'layer_{layer_idx}'
+            layer_config = {}
+            for component in self.components:
+                layer_config[component] = {
+                    'bits': 8,
+                    'pruning': 0.0
+                }
+            uniform_8bit[layer_key] = layer_config
+        configs.append(uniform_8bit)
+        
+        # Add layer-wise decreasing precision (more bits for early layers)
+        decreasing_config = {}
+        for layer_idx in range(self.num_layers):
+            layer_key = f'layer_{layer_idx}'
+            layer_config = {}
+            
+            # Lower layers have higher precision
+            relative_depth = layer_idx / max(1, self.num_layers - 1)  # 0 to 1
+            if relative_depth < 0.33:
+                bits = 12
+            elif relative_depth < 0.66:
+                bits = 8
+            else:
+                bits = 6
+                
+            for component in self.components:
+                layer_config[component] = {
+                    'bits': bits,
+                    'pruning': 0.0
+                }
+            decreasing_config[layer_key] = layer_config
+        configs.append(decreasing_config)
+        
+        return configs
+    
     def _config_to_vector(self, config):
         """Convert a configuration dictionary to a flat vector for GP"""
         vector = []
         
+        # Check if config is a list or dictionary
+        if isinstance(config, list):
+            # Convert from list format to dictionary format
+            dict_config = {}
+            for layer_idx in range(self.num_layers):
+                dict_config[f'layer_{layer_idx}'] = {}
+                for comp_idx, component in enumerate(self.components):
+                    dict_config[f'layer_{layer_idx}'][component] = config[layer_idx][comp_idx]
+            config = dict_config
+        
+        # Process the dictionary format
         for layer_idx in range(self.num_layers):
             layer_key = f'layer_{layer_idx}'
-            layer_config = config[layer_key]
-            
-            for component in self.components:
-                if component in layer_config:
-                    # Normalize bit-width to [0, 1]
-                    bits = layer_config[component]['bits']
-                    bits_idx = self.bit_options.index(bits)
-                    bits_norm = bits_idx / (len(self.bit_options) - 1)
-                    
-                    # Normalize pruning to [0, 1]
-                    pruning = layer_config[component]['pruning']
-                    pruning_norm = pruning / 0.5  # Max pruning is 0.5
-                    
-                    vector.extend([bits_norm, pruning_norm])
-                else:
-                    # Default values if component not found
+            if layer_key in config:
+                layer_config = config[layer_key]
+                
+                for component in self.components:
+                    if component in layer_config:
+                        # Normalize bit-width to [0, 1]
+                        bits = layer_config[component]['bits']
+                        bits_idx = self.bit_options.index(bits) if bits in self.bit_options else -1
+                        if bits_idx == -1:
+                            # Handle case where bit value isn't in bit_options
+                            closest_bit = min(self.bit_options, key=lambda x: abs(x - bits))
+                            bits_idx = self.bit_options.index(closest_bit)
+                        bits_norm = bits_idx / (len(self.bit_options) - 1)
+                        
+                        # Normalize pruning to [0, 1]
+                        pruning = layer_config[component]['pruning']
+                        pruning_norm = pruning / 0.5  # Max pruning is 0.5
+                        
+                        vector.extend([bits_norm, pruning_norm])
+                    else:
+                        # Default values if component not found
+                        vector.extend([1.0, 0.0])  # 16-bit, no pruning
+            else:
+                # Default values if layer not found
+                for _ in range(len(self.components)):
                     vector.extend([1.0, 0.0])  # 16-bit, no pruning
         
         return np.array(vector)
@@ -166,9 +228,17 @@ class BayesianOptimization:
         K_noise = K + np.eye(len(K)) * self.noise
         
         # Compute posterior mean and variance
-        K_inv = np.linalg.inv(K_noise)
-        mu = K_s.T @ K_inv @ y_train
-        sigma2 = np.diag(K_ss - K_s.T @ K_inv @ K_s)
+        try:
+            K_inv = np.linalg.inv(K_noise)
+            mu = K_s.T @ K_inv @ y_train
+            sigma2 = np.diag(K_ss - K_s.T @ K_inv @ K_s)
+            
+            # Ensure variances are positive
+            sigma2 = np.maximum(sigma2, 1e-6)
+        except np.linalg.LinAlgError:
+            # Fallback if matrix inversion fails
+            print("Warning: Matrix inversion failed, using prior")
+            return np.zeros(len(X_test)), np.ones(len(X_test)) * self.signal_variance
         
         return mu, sigma2
     
@@ -205,7 +275,7 @@ class BayesianOptimization:
             config: Model configuration dictionary
             
         Returns:
-            Objective value (higher is better)
+            Objective value (higher is better), results
         """
         # Evaluate configuration
         results = self.toggle.evaluate_config(config)
@@ -215,7 +285,7 @@ class BayesianOptimization:
         model_size = results['model_size']
         robustness = results['robustness']
         
-        # Calculate average bit-width and pruning
+        # Calculate average bit-width
         total_bits = 0
         total_pruning = 0
         count = 0
@@ -227,6 +297,7 @@ class BayesianOptimization:
                 count += 1
         
         avg_bits = total_bits / count if count > 0 else 16
+        avg_pruning = total_pruning / count if count > 0 else 0
         compression_ratio = (16 - avg_bits) / 16  # Higher is better
         
         # Create a continuous objective that rewards partial STL satisfaction
@@ -238,9 +309,39 @@ class BayesianOptimization:
         else:
             # Not satisfied, but give partial credit for being close
             # Scale from -100 to 0 based on how close we are
-            obj_value = -100 + 100 * (stl_score + 1) / 2 + 10 * compression_ratio
+            normalization = min(1.0, max(0.0, (stl_score + 1) / 2))
+            obj_value = -100 + 100 * normalization + 10 * compression_ratio
+        
+        # Add the evaluation result to the log
+        self.log_evaluation(config, results, avg_bits, avg_pruning, obj_value)
         
         return obj_value, results
+    
+    def log_evaluation(self, config, results, avg_bits, avg_pruning, obj_value):
+        """Log evaluation results for analysis"""
+        log_entry = {
+            'obj_value': float(obj_value),
+            'stl_score': float(results['stl_score']),
+            'model_size': float(results['model_size']),
+            'stl_satisfied': bool(results['stl_satisfied']),
+            'avg_bits': float(avg_bits),
+            'avg_pruning': float(avg_pruning),
+            'robustness': {k: float(v) for k, v in results['robustness'].items()}
+        }
+        
+        # Print summary
+        status = "✓" if results['stl_satisfied'] else "✗"
+        print(f"Eval: STL={results['stl_score']:.4f} {status}, "
+              f"Size={results['model_size']:.2f}MB, "
+              f"Bits={avg_bits:.2f}, Pruning={avg_pruning*100:.1f}%, "
+              f"Obj={obj_value:.2f}")
+        
+        # Save to log file (optional)
+        # try:
+        #     with open('optimization_log.jsonl', 'a') as f:
+        #         f.write(json.dumps(log_entry) + '\n')
+        # except:
+        #     pass
     
     def optimize(self, max_iterations=50, exploration_weight=0.1):
         """
@@ -264,10 +365,6 @@ class BayesianOptimization:
                 
                 self.X.append(config_vector)
                 self.y.append(obj_value)
-                
-                print(f"Initial config: STL score={results['stl_score']:.4f}, "
-                      f"Model size={results['model_size']:.2f} MB, "
-                      f"Satisfied={results['stl_satisfied']}")
         
         # If no initial configs, evaluate default and a random one
         if not self.X:
@@ -279,10 +376,6 @@ class BayesianOptimization:
             self.X.append(default_vector)
             self.y.append(obj_value)
             
-            print(f"Default config: STL score={results['stl_score']:.4f}, "
-                  f"Model size={results['model_size']:.2f} MB, "
-                  f"Satisfied={results['stl_satisfied']}")
-            
             print("Evaluating a random configuration...")
             random_vector = self._random_config()
             random_config = self._vector_to_config(random_vector)
@@ -290,10 +383,6 @@ class BayesianOptimization:
             
             self.X.append(random_vector)
             self.y.append(obj_value)
-            
-            print(f"Random config: STL score={results['stl_score']:.4f}, "
-                  f"Model size={results['model_size']:.2f} MB, "
-                  f"Satisfied={results['stl_satisfied']}")
         
         # Main optimization loop
         best_obj = max(self.y)
