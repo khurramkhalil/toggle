@@ -464,9 +464,18 @@ class DynamicPrecisionTransformer:
                             param.data, alpha, bits, True
                         )
     
+    # Update the evaluate_stl_properties method in DynamicPrecisionTransformer class
+    # This should be inserted in place of the existing evaluate_stl_properties method
+
     def evaluate_stl_properties(self, model):
-        """Evaluate all STL properties for the given model"""
-        print("Evaluating STL properties...")
+        """Evaluate all STL properties for the given model using formal STL specifications"""
+        print("Evaluating STL properties using RTAMT...")
+        
+        # Import the STL monitor (assuming the file is in the same directory)
+        from toggle_rtamt import STLMonitor
+        
+        # Initialize STL monitor with our thresholds
+        stl_monitor = STLMonitor(stl_thresholds=self.stl_thresholds)
         
         stl_results = {
             'coherence': [],
@@ -491,74 +500,43 @@ class DynamicPrecisionTransformer:
                 base_attentions = self.base_outputs[i]['attentions']
                 base_hidden_states = self.base_outputs[i]['hidden_states']
                 
-                # 1. Evaluate coherence using JSD between token distributions
-                # For simplicity, we'll compute JSD only for the last token
-                last_token_base_probs = base_probs[0, -1].numpy()
-                last_token_quant_probs = probs[0, -1].cpu().numpy()
+                # Prepare inputs for STL monitor
+                base_outputs = {
+                    'probs': base_probs,
+                    'attentions': base_attentions,
+                    'hidden_states': base_hidden_states
+                }
                 
-                # Get top-p tokens (p=0.9)
-                base_top_indices = np.argsort(last_token_base_probs)[::-1]
-                quant_top_indices = np.argsort(last_token_quant_probs)[::-1]
+                quant_outputs = {
+                    'probs': probs.cpu(),
+                    'attentions': [att.cpu() for att in attentions],
+                    'hidden_states': [hs.cpu() for hs in hidden_states]
+                }
                 
-                # Union of top indices that cover 90% of probability mass
-                base_cumsum = np.cumsum(last_token_base_probs[base_top_indices])
-                quant_cumsum = np.cumsum(last_token_quant_probs[quant_top_indices])
+                # Evaluate all properties using formal STL specifications
+                robustness_values = stl_monitor.evaluate_all_properties(base_outputs, quant_outputs)
                 
-                base_top_p_indices = base_top_indices[base_cumsum <= 0.9]
-                quant_top_p_indices = quant_top_indices[quant_cumsum <= 0.9]
-                
-                top_indices = np.union1d(base_top_p_indices, quant_top_p_indices)
-                
-                # Compute JSD only on these top tokens
-                jsd = jensenshannon(
-                    last_token_base_probs[top_indices] / np.sum(last_token_base_probs[top_indices]),
-                    last_token_quant_probs[top_indices] / np.sum(last_token_quant_probs[top_indices])
-                )
-                stl_results['coherence'].append(jsd)
-                
-                # 2. Evaluate attention map similarity across layers
-                attention_sims = []
-                for l in range(len(attentions)):
-                    base_att = base_attentions[l][0].flatten().numpy()
-                    quant_att = attentions[l][0].cpu().flatten().numpy()
-                    
-                    # Compute cosine similarity
-                    sim = np.dot(base_att, quant_att) / (np.linalg.norm(base_att) * np.linalg.norm(quant_att))
-                    attention_sims.append(sim)
-                
-                stl_results['attention'].append(np.mean(attention_sims))
-                
-                # 3. Evaluate contextual consistency using embedding similarity
-                # Use the last hidden state for simplicity
-                base_emb = base_hidden_states[-1][0, -1].numpy()
-                quant_emb = hidden_states[-1][0, -1].cpu().numpy()
-                
-                context_sim = np.dot(base_emb, quant_emb) / (np.linalg.norm(base_emb) * np.linalg.norm(quant_emb))
-                stl_results['context'].append(context_sim)
-                
-                # 4. Factual accuracy (using probability ratio for most likely token as proxy)
-                # This is a simplified proxy in the absence of ground truth data
-                most_likely_token = base_probs[0, -1].argmax().item()
-                base_prob = base_probs[0, -1, most_likely_token].item()
-                quant_prob = probs[0, -1, most_likely_token].cpu().item()
-                
-                prob_ratio = quant_prob / (base_prob + 1e-10)  # Avoid division by zero
-                stl_results['factual'].append(prob_ratio)
+                # Store results
+                for property_name, rob_value in robustness_values.items():
+                    stl_results[property_name].append(rob_value)
         
-        # Aggregate results
-        avg_results = {
-            'coherence': np.mean(stl_results['coherence']),
-            'attention': np.mean(stl_results['attention']),
-            'context': np.mean(stl_results['context']),
-            'factual': np.mean(stl_results['factual']),
-        }
+        # Aggregate results - for STL robustness, the minimum value across all samples is what matters
+        # because a single violation means the property is not satisfied
+        min_results = {k: np.min(v) for k, v in stl_results.items()}
+        avg_results = {k: np.mean(v) for k, v in stl_results.items()}
         
-        # Compute STL robustness scores
-        robustness = {
-            'coherence': self.stl_thresholds['coherence'] - avg_results['coherence'],  # Lower is better for JSD
-            'attention': avg_results['attention'] - self.stl_thresholds['attention'],  # Higher is better
-            'context': avg_results['context'] - self.stl_thresholds['context'],       # Higher is better
-            'factual': avg_results['factual'] - self.stl_thresholds['factual']        # Higher is better
+        # In STL with robustness semantics, positive values mean the property is satisfied
+        # and negative values mean it's violated, with the magnitude indicating "how much"
+        # No need to compare with thresholds as that's built into the robustness calculation
+        robustness = min_results
+        
+        # For compatibility with the rest of the code, we'll also compute average metrics
+        # using our previous approach
+        metrics = {
+            'coherence': avg_results['coherence'],
+            'attention': avg_results['attention'],
+            'context': avg_results['context'],
+            'factual': avg_results['factual']
         }
         
         # Calculate overall STL satisfaction score
@@ -570,7 +548,7 @@ class DynamicPrecisionTransformer:
         ])
         
         return {
-            'metrics': avg_results,
+            'metrics': metrics,
             'robustness': robustness,
             'stl_score': stl_score,
             'stl_satisfied': stl_score >= 0
