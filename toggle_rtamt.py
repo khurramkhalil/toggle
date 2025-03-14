@@ -42,7 +42,7 @@ class STLMonitor:
         self.coherence_spec.declare_var('jsd', 'float')
         self.coherence_spec.declare_var('threshold', 'float')
         # JSD should always be less than threshold
-        self.coherence_spec.spec = 'globally[0,{}](threshold - jsd >= 0)'.format(self.horizon)
+        self.coherence_spec.spec = 'always(threshold - jsd >= 0)'
         self.coherence_spec.parse()
         
         # 2. Long-Range Dependencies Specification
@@ -51,7 +51,7 @@ class STLMonitor:
         self.attention_spec.declare_var('sim', 'float')
         self.attention_spec.declare_var('threshold', 'float')
         # Similarity should always be greater than threshold
-        self.attention_spec.spec = 'globally[0,{}](sim - threshold >= 0)'.format(self.horizon)
+        self.attention_spec.spec = 'always(sim - threshold >= 0)'
         self.attention_spec.parse()
         
         # 3. Contextual Consistency Specification
@@ -60,7 +60,7 @@ class STLMonitor:
         self.context_spec.declare_var('sim', 'float')
         self.context_spec.declare_var('threshold', 'float')
         # Embedding similarity should always be greater than threshold
-        self.context_spec.spec = 'globally[0,{}](sim - threshold >= 0)'.format(self.horizon)
+        self.context_spec.spec = 'always(sim - threshold >= 0)'
         self.context_spec.parse()
         
         # 4. Factual Accuracy Specification
@@ -69,7 +69,7 @@ class STLMonitor:
         self.factual_spec.declare_var('ratio', 'float')
         self.factual_spec.declare_var('threshold', 'float')
         # Probability ratio should always be greater than threshold
-        self.factual_spec.spec = 'globally[0,{}](ratio - threshold >= 0)'.format(self.horizon)
+        self.factual_spec.spec = 'always(ratio - threshold >= 0)'
         self.factual_spec.parse()
     
     def evaluate_coherence(self, base_probs, quant_probs, time_points=None):
