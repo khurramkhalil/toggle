@@ -333,6 +333,7 @@ class EnhancedOptimizer:
         
         return ei
     
+    # Fix for the _obj_function method in toggle_enhanced_optimization.py
     def _obj_function(self, config):
         """
         Evaluate a configuration with continuous rewards for STL satisfaction
@@ -354,9 +355,11 @@ class EnhancedOptimizer:
         # Evaluate with the current model state
         results = self.toggle.evaluate_stl_properties(self.toggle.base_model)
         
+        # Calculate model size - this needs to be computed here if not provided by evaluate_stl_properties
+        model_size = self.calculate_model_size(config)
+        
         # Calculate metrics and objective value
         stl_score = results['stl_score']
-        model_size = results['model_size']
         robustness = results['robustness']
         
         # Calculate average bit-width
@@ -386,7 +389,8 @@ class EnhancedOptimizer:
             normalization = min(1.0, max(0.0, (stl_score + 1) / 2))
             obj_value = -100 + 100 * normalization + 10 * compression_ratio
         
-        # Add evaluation metrics to results
+        # Add computed values to results
+        results['model_size'] = model_size
         results['avg_bits'] = avg_bits
         results['avg_pruning'] = avg_pruning
         results['compression_ratio'] = compression_ratio
@@ -398,14 +402,58 @@ class EnhancedOptimizer:
         # Log evaluation
         status = "✓" if results['stl_satisfied'] else "✗"
         print(f"Eval: STL={stl_score:.4f} {status}, "
-              f"Size={model_size:.2f}MB, "
-              f"Bits={avg_bits:.2f}, Pruning={avg_pruning*100:.1f}%, "
-              f"Obj={obj_value:.2f}")
+            f"Size={model_size:.2f}MB, "
+            f"Bits={avg_bits:.2f}, Pruning={avg_pruning*100:.1f}%, "
+            f"Obj={obj_value:.2f}")
         
         # Restore original parameters
         self.restore_original_parameters()
         
         return obj_value, results
+
+    def calculate_model_size(self, config):
+        """Calculate approximate model size with the given configuration"""
+        # This is an estimation based on parameter bit-widths
+        total_params = 0
+        total_bits = 0
+        
+        for name, param in self.toggle.base_model.named_parameters():
+            if 'weight' not in name:
+                continue
+                
+            # Count parameters
+            param_count = param.numel()
+            total_params += param_count
+            
+            # Find matching layer and component in config
+            bits = 16  # Default to 16-bit
+            pruning = 0.0  # Default to no pruning
+            
+            for layer_idx in range(self.num_layers):
+                layer_key = f'layer_{layer_idx}'
+                if layer_key in config:
+                    for component in self.components:
+                        # Generate the parameter prefix for this layer/component
+                        if self.toggle.model_type == "gpt2":
+                            param_prefix = f"transformer.h.{layer_idx}.{component}"
+                        else:  # LLaMA style
+                            param_prefix = f"model.layers.{layer_idx}.{component}"
+                            
+                        if name.startswith(param_prefix) and component in config[layer_key]:
+                            bits = config[layer_key][component]['bits']
+                            pruning = config[layer_key][component]['pruning']
+                            break
+            
+            # Adjust param count for pruning
+            effective_param_count = param_count * (1 - pruning)
+            
+            # Add to total bits
+            total_bits += effective_param_count * bits
+        
+        # Convert to MB
+        model_size_mb = total_bits / (8 * 1024 * 1024)
+        
+        return model_size_mb
     
     def _apply_config_with_swapping(self, config):
         """Apply configuration using parameter swapping"""
