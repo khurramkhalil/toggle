@@ -214,7 +214,7 @@ class DynamicPrecisionTransformer:
                 # Simulate quantization through controlled noise addition
                 if bits < 16:
                     # Scale factor based on bit-width
-                    noise_scale = 2 ** (-bits)
+                    noise_scale = 2.0 ** (-float(bits))  # Convert to float to avoid error with negative power
                     # Add noise proportional to parameter magnitude and bit-width
                     noise = torch.randn_like(param.data) * noise_scale * torch.abs(param.data)
                     param.data = param.data + noise
