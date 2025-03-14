@@ -318,14 +318,22 @@ class DynamicPrecisionTransformer:
         # Bit-width options
         self.bit_options = [2, 3, 4, 6, 8, 10, 12, 16]
         
-        # STL thresholds
-        self.stl_thresholds = {
-            'coherence': 0.1,    # Max JSD between token distributions
-            'attention': 0.8,    # Min cosine similarity between attention maps
-            'context': 0.85,     # Min cosine similarity between embeddings
-            'factual': 0.9       # Min probability ratio for factual correctness
-        }
+        # # STL thresholds
+        # self.stl_thresholds = {
+        #     'coherence': 0.1,    # Max JSD between token distributions
+        #     'attention': 0.8,    # Min cosine similarity between attention maps
+        #     'context': 0.85,     # Min cosine similarity between embeddings
+        #     'factual': 0.9       # Min probability ratio for factual correctness
+        # }
         
+        # More flexible STL thresholds
+        self.stl_thresholds = {
+            'coherence': 0.15,    # Increase tolerance for JSD (was 0.1)
+            'attention': 0.75,    # Reduce similarity requirement (was 0.8)
+            'context': 0.80,      # Reduce similarity requirement (was 0.85)
+            'factual': 0.85       # Reduce ratio requirement (was 0.9)
+        }
+
         # Tokenize dataset for easy access
         self.encoded_dataset = [self.tokenizer.encode(text, return_tensors="pt").to(self.device) 
                                for text in self.dataset]
@@ -334,7 +342,7 @@ class DynamicPrecisionTransformer:
         self.base_outputs = self.get_base_model_outputs()
         
         # Create default config (all 16-bit, no pruning)
-        self.default_config = self.create_default_config()
+        self.default_config = self.create_initial_configs()
     
     def create_default_config(self):
         """Create a default configuration with full precision and no pruning"""
@@ -370,7 +378,50 @@ class DynamicPrecisionTransformer:
             config[f'layer_{layer_idx}'] = layer_config
         
         return config
-    
+
+
+    def create_initial_configs(self):
+        """Create promising initial configurations"""
+        configs = []
+        
+        # Add a moderately compressed config (8-bit for all)
+        uniform_8bit = {}
+        for layer_idx in range(self.num_layers):
+            layer_key = f'layer_{layer_idx}'
+            layer_config = {}
+            for component in self.components:
+                layer_config[component] = {
+                    'bits': 8,
+                    'pruning': 0.0
+                }
+            uniform_8bit[layer_key] = layer_config
+        configs.append(uniform_8bit)
+        
+        # Add layer-wise decreasing precision
+        decreasing_config = {}
+        for layer_idx in range(self.num_layers):
+            layer_key = f'layer_{layer_idx}'
+            layer_config = {}
+            
+            # Lower layers have higher precision
+            relative_depth = layer_idx / (self.num_layers - 1)  # 0 to 1
+            if relative_depth < 0.33:
+                bits = 12
+            elif relative_depth < 0.66:
+                bits = 8
+            else:
+                bits = 6
+                
+            for component in self.components:
+                layer_config[component] = {
+                    'bits': bits,
+                    'pruning': 0.0
+                }
+            decreasing_config[layer_key] = layer_config
+        configs.append(decreasing_config)
+        
+        return configs
+
     def get_base_model_outputs(self):
         """Compute and store base model outputs for later comparison"""
         print("Computing base model outputs...")

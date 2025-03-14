@@ -110,8 +110,17 @@ class BayesianOptimization:
         return config
     
     def _random_config(self):
-        """Generate a random configuration vector"""
-        vector = np.random.rand(self.num_layers * len(self.components) * 2)
+        """Generate a random configuration vector biased toward lower bit-widths"""
+        # Create biased random values for bit-widths (more likely to pick lower values)
+        bit_values = np.random.beta(2, 5, self.num_layers * len(self.components))
+        # Create random values for pruning
+        pruning_values = np.random.beta(1.5, 5, self.num_layers * len(self.components))
+        
+        # Combine into a single vector
+        vector = np.zeros(self.num_layers * len(self.components) * 2)
+        vector[0::2] = bit_values    # Even indices for bit-widths
+        vector[1::2] = pruning_values  # Odd indices for pruning
+        
         return vector
     
     def _kernel(self, x1, x2):
@@ -190,7 +199,7 @@ class BayesianOptimization:
     
     def _obj_function(self, config):
         """
-        Evaluate a configuration with respect to STL satisfaction and model size
+        Evaluate a configuration with continuous rewards for STL satisfaction
         
         Args:
             config: Model configuration dictionary
@@ -204,16 +213,32 @@ class BayesianOptimization:
         # Extract key metrics
         stl_score = results['stl_score']
         model_size = results['model_size']
-        stl_satisfied = results['stl_satisfied']
+        robustness = results['robustness']
         
-        # If STL constraints are satisfied, optimize for model size
-        # Otherwise, optimize for STL score
-        if stl_satisfied:
-            # Penalize larger models, but keep obj value positive for satisfied configs
-            obj_value = 100.0 - 0.1 * model_size
+        # Calculate average bit-width and pruning
+        total_bits = 0
+        total_pruning = 0
+        count = 0
+        
+        for layer_key, layer_config in config.items():
+            for component, comp_config in layer_config.items():
+                total_bits += comp_config['bits']
+                total_pruning += comp_config['pruning']
+                count += 1
+        
+        avg_bits = total_bits / count if count > 0 else 16
+        compression_ratio = (16 - avg_bits) / 16  # Higher is better
+        
+        # Create a continuous objective that rewards partial STL satisfaction
+        # and lower bit-widths even when not fully satisfied
+        if stl_score >= 0:
+            # Satisfied: Maximize compression while maintaining satisfaction
+            # Scale from 0 to 100 based on compression ratio
+            obj_value = 100 + 50 * compression_ratio + 10 * stl_score
         else:
-            # Make obj value negative for unsatisfied configs
-            obj_value = stl_score - 100.0
+            # Not satisfied, but give partial credit for being close
+            # Scale from -100 to 0 based on how close we are
+            obj_value = -100 + 100 * (stl_score + 1) / 2 + 10 * compression_ratio
         
         return obj_value, results
     
