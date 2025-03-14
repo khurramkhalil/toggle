@@ -1,0 +1,218 @@
+{
+  "layer_0": {
+    "attn.c_attn": {
+      "bits": 3,
+      "pruning": 0.09833809737793138
+    },
+    "attn.c_proj": {
+      "bits": 8,
+      "pruning": 0.09200865176363829
+    },
+    "mlp.c_fc": {
+      "bits": 6,
+      "pruning": 0.2728653745220759
+    },
+    "mlp.c_proj": {
+      "bits": 4,
+      "pruning": 0.41863983717310277
+    }
+  },
+  "layer_1": {
+    "attn.c_attn": {
+      "bits": 3,
+      "pruning": 0.06744858475417298
+    },
+    "attn.c_proj": {
+      "bits": 6,
+      "pruning": 0.10800389010241156
+    },
+    "mlp.c_fc": {
+      "bits": 6,
+      "pruning": 0.1413602650434905
+    },
+    "mlp.c_proj": {
+      "bits": 4,
+      "pruning": 0.20759909553085062
+    }
+  },
+  "layer_2": {
+    "attn.c_attn": {
+      "bits": 4,
+      "pruning": 0.13060279759829563
+    },
+    "attn.c_proj": {
+      "bits": 4,
+      "pruning": 0.08000228770824681
+    },
+    "mlp.c_fc": {
+      "bits": 4,
+      "pruning": 0.2831698959983899
+    },
+    "mlp.c_proj": {
+      "bits": 2,
+      "pruning": 0.22449343374621747
+    }
+  },
+  "layer_3": {
+    "attn.c_attn": {
+      "bits": 3,
+      "pruning": 0.18405286609032406
+    },
+    "attn.c_proj": {
+      "bits": 4,
+      "pruning": 0.188888073029943
+    },
+    "mlp.c_fc": {
+      "bits": 6,
+      "pruning": 0.043792725422499665
+    },
+    "mlp.c_proj": {
+      "bits": 3,
+      "pruning": 0.16877293531605692
+    }
+  },
+  "layer_4": {
+    "attn.c_attn": {
+      "bits": 10,
+      "pruning": 0.10029657902165759
+    },
+    "attn.c_proj": {
+      "bits": 3,
+      "pruning": 0.076187588047053
+    },
+    "mlp.c_fc": {
+      "bits": 3,
+      "pruning": 0.09987712858516436
+    },
+    "mlp.c_proj": {
+      "bits": 6,
+      "pruning": 0.02657153675242936
+    }
+  },
+  "layer_5": {
+    "attn.c_attn": {
+      "bits": 4,
+      "pruning": 0.13464038456179345
+    },
+    "attn.c_proj": {
+      "bits": 6,
+      "pruning": 0.03648165079179787
+    },
+    "mlp.c_fc": {
+      "bits": 6,
+      "pruning": 0.09351257310968035
+    },
+    "mlp.c_proj": {
+      "bits": 3,
+      "pruning": 0.13213184730787383
+    }
+  },
+  "layer_6": {
+    "attn.c_attn": {
+      "bits": 2,
+      "pruning": 0.354989088476628
+    },
+    "attn.c_proj": {
+      "bits": 6,
+      "pruning": 0.055069947535156295
+    },
+    "mlp.c_fc": {
+      "bits": 2,
+      "pruning": 0.1434723493435758
+    },
+    "mlp.c_proj": {
+      "bits": 6,
+      "pruning": 0.1513210857760437
+    }
+  },
+  "layer_7": {
+    "attn.c_attn": {
+      "bits": 3,
+      "pruning": 0.24273997110348353
+    },
+    "attn.c_proj": {
+      "bits": 3,
+      "pruning": 0.18642938472957343
+    },
+    "mlp.c_fc": {
+      "bits": 6,
+      "pruning": 0.27127908051388644
+    },
+    "mlp.c_proj": {
+      "bits": 3,
+      "pruning": 0.022941196585397325
+    }
+  },
+  "layer_8": {
+    "attn.c_attn": {
+      "bits": 3,
+      "pruning": 0.15036371115753308
+    },
+    "attn.c_proj": {
+      "bits": 6,
+      "pruning": 0.24253396505626143
+    },
+    "mlp.c_fc": {
+      "bits": 3,
+      "pruning": 0.13260072191659925
+    },
+    "mlp.c_proj": {
+      "bits": 4,
+      "pruning": 0.23888597562531153
+    }
+  },
+  "layer_9": {
+    "attn.c_attn": {
+      "bits": 2,
+      "pruning": 0.14754941070901295
+    },
+    "attn.c_proj": {
+      "bits": 3,
+      "pruning": 0.022921323916653732
+    },
+    "mlp.c_fc": {
+      "bits": 2,
+      "pruning": 0.06399758593644256
+    },
+    "mlp.c_proj": {
+      "bits": 6,
+      "pruning": 0.10538662689155526
+    }
+  },
+  "layer_10": {
+    "attn.c_attn": {
+      "bits": 3,
+      "pruning": 0.058424651702090075
+    },
+    "attn.c_proj": {
+      "bits": 6,
+      "pruning": 0.24010025771689622
+    },
+    "mlp.c_fc": {
+      "bits": 6,
+      "pruning": 0.0435367496844093
+    },
+    "mlp.c_proj": {
+      "bits": 10,
+      "pruning": 0.14713021980689167
+    }
+  },
+  "layer_11": {
+    "attn.c_attn": {
+      "bits": 3,
+      "pruning": 0.1149626471769155
+    },
+    "attn.c_proj": {
+      "bits": 3,
+      "pruning": 0.13000766979028364
+    },
+    "mlp.c_fc": {
+      "bits": 2,
+      "pruning": 0.24189774768248248
+    },
+    "mlp.c_proj": {
+      "bits": 2,
+      "pruning": 0.10720381008028891
+    }
+  }
+}
