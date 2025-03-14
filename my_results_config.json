@@ -1,0 +1,218 @@
+{
+  "layer_0": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_1": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_2": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_3": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_4": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_5": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_6": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_7": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_8": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_9": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_10": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  },
+  "layer_11": {
+    "attn.c_attn": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    }
+  }
+}
