@@ -465,17 +465,15 @@ class DynamicPrecisionTransformer:
                         )
     
     # Update the evaluate_stl_properties method in DynamicPrecisionTransformer class
-    # This should be inserted in place of the existing evaluate_stl_properties method
-
     def evaluate_stl_properties(self, model):
-        """Evaluate all STL properties for the given model using formal STL specifications"""
-        print("Evaluating STL properties using RTAMT...")
+        """Evaluate all STL properties for the given model using STL specifications"""
+        print("Evaluating STL properties...")
         
         # Import the STL monitor (assuming the file is in the same directory)
-        from toggle_rtamt import STLMonitor
+        from toggle_rtamt import SimpleSTLMonitor
         
         # Initialize STL monitor with our thresholds
-        stl_monitor = STLMonitor(stl_thresholds=self.stl_thresholds)
+        stl_monitor = SimpleSTLMonitor(stl_thresholds=self.stl_thresholds)
         
         stl_results = {
             'coherence': [],
@@ -513,7 +511,7 @@ class DynamicPrecisionTransformer:
                     'hidden_states': [hs.cpu() for hs in hidden_states]
                 }
                 
-                # Evaluate all properties using formal STL specifications
+                # Evaluate all properties using STL specifications
                 robustness_values = stl_monitor.evaluate_all_properties(base_outputs, quant_outputs)
                 
                 # Store results
@@ -522,22 +520,15 @@ class DynamicPrecisionTransformer:
         
         # Aggregate results - for STL robustness, the minimum value across all samples is what matters
         # because a single violation means the property is not satisfied
-        min_results = {k: np.min(v) for k, v in stl_results.items()}
-        avg_results = {k: np.mean(v) for k, v in stl_results.items()}
+        min_results = {k: float(np.min(v)) for k, v in stl_results.items()}
+        avg_results = {k: float(np.mean(v)) for k, v in stl_results.items()}
         
         # In STL with robustness semantics, positive values mean the property is satisfied
         # and negative values mean it's violated, with the magnitude indicating "how much"
-        # No need to compare with thresholds as that's built into the robustness calculation
         robustness = min_results
         
         # For compatibility with the rest of the code, we'll also compute average metrics
-        # using our previous approach
-        metrics = {
-            'coherence': avg_results['coherence'],
-            'attention': avg_results['attention'],
-            'context': avg_results['context'],
-            'factual': avg_results['factual']
-        }
+        metrics = avg_results
         
         # Calculate overall STL satisfaction score
         stl_score = min([
