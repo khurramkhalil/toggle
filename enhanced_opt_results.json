@@ -1,0 +1,40 @@
+{
+  "optimization_summary": {
+    "model_name": "gpt2",
+    "num_iterations": 1000,
+    "exploration_weight": 0.9,
+    "optimization_time": 9721.820265054703,
+    "best_stl_score": -0.7329107243410717,
+    "best_model_size": 136.24544494634912,
+    "best_stl_satisfied": false,
+    "cache_hits": 0,
+    "total_evaluations": 1003,
+    "stl_thresholds": {
+      "coherence": 0.15,
+      "attention": 0.75,
+      "context": 0.8,
+      "factual": 0.85
+    }
+  },
+  "best_results": {
+    "metrics": {
+      "coherence": -0.5644866228103638,
+      "attention": -0.0575655922293663,
+      "context": 0.07930546998977661,
+      "factual": -0.6408489555146405
+    },
+    "robustness": {
+      "coherence": -0.5841286182403564,
+      "attention": -0.12917619943618774,
+      "context": 0.05244964361190796,
+      "factual": -0.7329107243410717
+    },
+    "stl_score": -0.7329107243410717,
+    "stl_satisfied": false,
+    "model_size": 136.24544494634912,
+    "avg_bits": 7.729166666666667,
+    "avg_pruning": 0.23918862338191874,
+    "compression_ratio": 0.5169270833333333,
+    "obj_value": -81.47626538372026
+  }
+}
