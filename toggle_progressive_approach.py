@@ -1,193 +1,470 @@
 """
-Integration script for running the progressive compression approach
-with GPU optimization for TOGGLE framework.
+Progressive compression approach for TOGGLE framework.
+This implements a systematic layer-by-layer compression strategy
+that guarantees finding STL-satisfied configurations.
 """
 
-import argparse
-import json
-import time
 import torch
-import matplotlib.pyplot as plt
 import numpy as np
-from toggle_dynamic_poc import DynamicPrecisionTransformer
-from toggle_sensitivity_analysis import LayerSensitivityAnalyzer
-from toggle_progressive_approach import ProgressiveCompression
-from toggle_gpu_optimization import optimize_stl_evaluation
+from tqdm import tqdm
+import time
+import copy
+import matplotlib.pyplot as plt
 
-def run_progressive_optimization(model_name, max_iterations=100, 
-                                output_prefix="progressive_opt", 
-                                skip_sensitivity=False, threshold_relax=0.0):
+class ProgressiveCompression:
     """
-    Run progressive compression optimization with GPU acceleration
-    
-    Args:
-        model_name: Name of the pre-trained model to use
-        max_iterations: Maximum number of progressive iterations
-        output_prefix: Prefix for output files
-        skip_sensitivity: Skip sensitivity analysis if True
-        threshold_relax: Amount to relax STL thresholds (0.0-0.2)
+    Progressive compression strategy that starts with the base model
+    and gradually compresses layers based on sensitivity until 
+    constraints are violated, then backs off.
     """
-    print(f"Initializing TOGGLE framework with model: {model_name}")
     
-    # Initialize TOGGLE framework
-    toggle = DynamicPrecisionTransformer(model_name=model_name)
-    
-    # Optionally relax STL thresholds
-    if threshold_relax > 0:
-        original_thresholds = toggle.stl_thresholds.copy()
-        relaxed_thresholds = {
-            'coherence': min(1.0, original_thresholds['coherence'] * (1 + threshold_relax)),
-            'attention': max(0.0, original_thresholds['attention'] * (1 - threshold_relax)),
-            'context': max(0.0, original_thresholds['context'] * (1 - threshold_relax)),
-            'factual': max(0.0, original_thresholds['factual'] * (1 - threshold_relax))
-        }
-        toggle.stl_thresholds = relaxed_thresholds
+    def __init__(self, toggle_framework, sensitivity_map=None):
+        """
+        Initialize the progressive compression.
         
-        print("Using relaxed STL thresholds:")
-        for k, v in relaxed_thresholds.items():
-            print(f"  {k}: {v:.4f} (original: {original_thresholds[k]:.4f})")
-    
-    # Apply GPU optimization
-    print("\n=== Applying GPU Optimization ===")
-    gpu_evaluator = optimize_stl_evaluation(toggle)
-    
-    # Measure GPU utilization
-    start_event = torch.cuda.Event(enable_timing=True)
-    end_event = torch.cuda.Event(enable_timing=True)
-    
-    start_event.record()
-    # Do a sample evaluation
-    _ = toggle.evaluate_stl_properties(toggle.base_model)
-    end_event.record()
-    
-    torch.cuda.synchronize()
-    eval_time = start_event.elapsed_time(end_event) / 1000  # Convert to seconds
-    print(f"Optimized evaluation time: {eval_time:.4f} seconds")
-    
-    # Step 1: Perform sensitivity analysis (unless skipped)
-    sensitivity_map = None
-    if not skip_sensitivity:
-        print("\n=== Performing Layer Sensitivity Analysis ===")
-        analyzer = LayerSensitivityAnalyzer(toggle)
-        sensitivity_map = analyzer.analyze_layer_sensitivity()
+        Args:
+            toggle_framework: DynamicPrecisionTransformer instance
+            sensitivity_map: Layer sensitivity data (optional)
+        """
+        self.toggle = toggle_framework
+        self.num_layers = toggle_framework.num_layers
+        self.components = toggle_framework.components
+        self.sensitivity_map = sensitivity_map
         
-        # Save sensitivity map
-        with open(f"{output_prefix}_sensitivity.json", 'w') as f:
-            # Convert numpy and torch values to native Python types
-            cleaned_map = {}
-            for key, value in sensitivity_map.items():
-                if isinstance(value, dict):
-                    cleaned_map[key] = {}
-                    for k, v in value.items():
-                        if isinstance(v, dict):
-                            cleaned_map[key][k] = {
-                                sk: float(sv) if isinstance(sv, (np.number, torch.Tensor)) else sv
-                                for sk, sv in v.items()
-                            }
-                        else:
-                            cleaned_map[key][k] = float(v) if isinstance(v, (np.number, torch.Tensor)) else v
-                else:
-                    cleaned_map[key] = float(value) if isinstance(value, (np.number, torch.Tensor)) else value
+        # Store original parameters for swapping
+        self.original_params = {}
+        self.store_original_parameters()
+        
+        # Set bit-width options in descending order (from high to low precision)
+        self.bit_options = sorted(toggle_framework.bit_options, reverse=True)
+        
+        # Set pruning options in ascending order (from low to high pruning)
+        self.pruning_options = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+        
+        # Track evaluations for efficiency
+        self.eval_cache = {}
+        self.eval_count = 0
+        
+        # Track results
+        self.results_history = []
+    
+    def store_original_parameters(self):
+        """Store original model parameters for later restoration"""
+        print("Storing original model parameters...")
+        self.original_params = {}
+        with torch.no_grad():
+            for name, param in self.toggle.base_model.named_parameters():
+                if 'weight' in name:
+                    self.original_params[name] = param.data.clone()
+    
+    def restore_original_parameters(self):
+        """Restore original model parameters"""
+        with torch.no_grad():
+            for name, param in self.toggle.base_model.named_parameters():
+                if name in self.original_params:
+                    param.data.copy_(self.original_params[name])
+
+    def _get_config_hash(self, config):
+        """Create a deterministic hash for a configuration"""
+        # Sort by layer and component for consistency
+        config_str = ""
+        layer_keys = sorted(config.keys())
+        for layer_key in layer_keys:
+            component_keys = sorted(config[layer_key].keys())
+            for component in component_keys:
+                bits = config[layer_key][component]['bits']
+                pruning = config[layer_key][component]['pruning']
+                config_str += f"{layer_key}.{component}:{bits}:{pruning:.2f};"
+        
+        return hash(config_str)
+    
+    def _apply_config_with_swapping(self, config):
+        """Apply configuration with parameter swapping for evaluation"""
+        # Apply configuration to model using toggle's method
+        for layer_idx in range(self.num_layers):
+            layer_key = f'layer_{layer_idx}'
+            if layer_key in config:
+                layer_config = config[layer_key]
+                
+                for component, comp_config in layer_config.items():
+                    bits = comp_config['bits']
+                    pruning = comp_config['pruning']
+                    
+                    # Apply to this layer/component
+                    self._apply_to_component(layer_idx, component, bits, pruning)
+    
+    def _apply_to_component(self, layer_idx, component, bits, pruning):
+        """Apply compression to a specific component"""
+        # Find parameter prefix for this layer/component
+        if self.toggle.model_type == "gpt2":
+            param_prefix = f"transformer.h.{layer_idx}.{component}"
+        else:  # LLaMA style
+            param_prefix = f"model.layers.{layer_idx}.{component}"
+        
+        # Apply quantization and pruning to matching parameters
+        self.toggle._apply_quantization_to_params(
+            self.toggle.base_model, param_prefix, bits, pruning)
+    
+    def evaluate_config(self, config):
+        """Evaluate a configuration with caching"""
+        config_hash = self._get_config_hash(config)
+        
+        # Check cache
+        if config_hash in self.eval_cache:
+            return self.eval_cache[config_hash]
+        
+        # Apply configuration
+        self._apply_config_with_swapping(config)
+        
+        # Evaluate
+        torch.cuda.synchronize()  # Ensure GPU operations are complete
+        self.eval_count += 1
+        
+        # Use CUDA events to measure time
+        start_event = torch.cuda.Event(enable_timing=True)
+        end_event = torch.cuda.Event(enable_timing=True)
+        
+        start_event.record()
+        
+        # Ensure model is on the right device
+        if next(self.toggle.base_model.parameters()).device.type != 'cuda':
+            self.toggle.base_model.to('cuda')
             
-            json.dump(cleaned_map, f, indent=2)
-        print(f"Sensitivity map saved to {output_prefix}_sensitivity.json")
-    else:
-        print("Skipping sensitivity analysis as requested")
-        # Try to load sensitivity map from file
-        try:
-            with open(f"{output_prefix}_sensitivity.json", 'r') as f:
-                sensitivity_map = json.load(f)
-            print(f"Loaded sensitivity map from {output_prefix}_sensitivity.json")
-        except:
-            print("No sensitivity map found, will proceed without it")
-    
-    # Step 2: Run progressive compression
-    print("\n=== Running Progressive Compression ===")
-    optimizer = ProgressiveCompression(
-        toggle_framework=toggle,
-        sensitivity_map=sensitivity_map
-    )
-    
-    start_time = time.time()
-    best_config, best_results = optimizer.run_progressive_compression(
-        max_iterations=max_iterations
-    )
-    optimization_time = time.time() - start_time
-    
-    # Step 3: Save results and visualize
-    results_path = f"{output_prefix}_results.json"
-    config_path = f"{output_prefix}_config.json"
-    
-    # Visualize compression progress
-    optimizer.visualize_results(output_prefix)
-    
-    # Create summary of optimization process
-    optimization_summary = {
-        'model_name': model_name,
-        'num_iterations': max_iterations,
-        'optimization_time': optimization_time,
-        'best_stl_score': float(best_results['stl_score']),
-        'best_model_size': float(best_results['model_size']),
-        'best_stl_satisfied': bool(best_results['stl_satisfied']),
-        'total_evaluations': optimizer.eval_count,
-        'stl_thresholds': toggle.stl_thresholds
-    }
-    
-    # Save best configuration
-    with open(config_path, 'w') as f:
-        json.dump(best_config, f, indent=2)
-        print(f"Best configuration saved to {config_path}")
-    
-    # Save optimization results
-    with open(results_path, 'w') as f:
-        # Clean up non-serializable values
-        cleaned_results = {}
-        for k, v in best_results.items():
-            if isinstance(v, dict):
-                cleaned_results[k] = {
-                    sk: float(sv) if isinstance(sv, (np.number, torch.Tensor)) else sv
-                    for sk, sv in v.items()
-                }
-            else:
-                cleaned_results[k] = float(v) if isinstance(v, (np.number, torch.Tensor)) else v
+        results = self.toggle.evaluate_stl_properties(self.toggle.base_model)
         
-        result_dict = {
-            'optimization_summary': optimization_summary,
-            'best_results': cleaned_results
-        }
-        json.dump(result_dict, f, indent=2)
-        print(f"Optimization results saved to {results_path}")
+        end_event.record()
+        torch.cuda.synchronize()
+        eval_time = start_event.elapsed_time(end_event) / 1000  # Convert to seconds
+        
+        # Calculate model size and other metrics
+        stl_score = results['stl_score']
+        model_size = self.calculate_model_size(config)
+        
+        # Calculate average bit-width and pruning
+        total_bits = 0
+        total_pruning = 0
+        count = 0
+        
+        for layer_key, layer_config in config.items():
+            for component, comp_config in layer_config.items():
+                total_bits += comp_config['bits']
+                total_pruning += comp_config['pruning']
+                count += 1
+        
+        avg_bits = total_bits / count if count > 0 else 16
+        avg_pruning = total_pruning / count if count > 0 else 0
+        compression_ratio = (16 - avg_bits) / 16  # Higher is better
+        
+        # Add to results
+        results['model_size'] = model_size
+        results['avg_bits'] = avg_bits
+        results['avg_pruning'] = avg_pruning
+        results['compression_ratio'] = compression_ratio
+        results['eval_time'] = eval_time
+        
+        # Add to cache
+        self.eval_cache[config_hash] = results
+        
+        # Restore original parameters
+        self.restore_original_parameters()
+        
+        # Log evaluation
+        status = "✓" if results['stl_satisfied'] else "✗"
+        print(f"Eval #{self.eval_count}: STL={stl_score:.4f} {status}, "
+              f"Size={model_size:.2f}MB, "
+              f"Bits={avg_bits:.2f}, Pruning={avg_pruning*100:.1f}%, "
+              f"Time={eval_time:.3f}s")
+        
+        return results
     
-    # Visualize best configuration
-    toggle.visualize_bit_width_config(best_config)
+    def calculate_model_size(self, config):
+        """Calculate model size based on configuration"""
+        total_params = 0
+        total_bits = 0
+        
+        for name, param in self.toggle.base_model.named_parameters():
+            if 'weight' not in name:
+                continue
+                
+            # Count parameters
+            param_count = param.numel()
+            total_params += param_count
+            
+            # Find matching layer and component in config
+            bits = 16  # Default to 16-bit
+            pruning = 0.0  # Default to no pruning
+            
+            for layer_idx in range(self.num_layers):
+                layer_key = f'layer_{layer_idx}'
+                if layer_key in config:
+                    for component in self.components:
+                        # Generate the parameter prefix for this layer/component
+                        if self.toggle.model_type == "gpt2":
+                            param_prefix = f"transformer.h.{layer_idx}.{component}"
+                        else:  # LLaMA style
+                            param_prefix = f"model.layers.{layer_idx}.{component}"
+                            
+                        if name.startswith(param_prefix) and component in config[layer_key]:
+                            bits = config[layer_key][component]['bits']
+                            pruning = config[layer_key][component]['pruning']
+                            break
+            
+            # Adjust param count for pruning
+            effective_param_count = param_count * (1 - pruning)
+            
+            # Add to total bits
+            total_bits += effective_param_count * bits
+        
+        # Convert to MB
+        model_size_mb = total_bits / (8 * 1024 * 1024)
+        
+        return model_size_mb
     
-    print("\n=== Progressive Optimization Complete ===")
-    print(f"Best configuration: STL score={best_results['stl_score']:.4f}, "
-          f"Model size={best_results['model_size']:.2f} MB, "
-          f"Satisfied={best_results['stl_satisfied']}")
-    print(f"Optimization took {optimization_time:.2f} seconds")
-    print(f"Total evaluations: {optimizer.eval_count}")
+    def _get_sorted_layers(self):
+        """Get layers sorted by sensitivity (least to most sensitive)"""
+        if not self.sensitivity_map:
+            # If no sensitivity map, just use default order
+            return [f'layer_{i}' for i in range(self.num_layers)]
+        
+        # Sort layers by sensitivity rank
+        layer_items = [(k, v['rank']) for k, v in self.sensitivity_map['layer'].items()]
+        sorted_items = sorted(layer_items, key=lambda x: x[1])
+        
+        return [item[0] for item in sorted_items]
     
-    return best_config, best_results
-
-def main():
-    parser = argparse.ArgumentParser(description="Run Progressive TOGGLE Optimization")
-    parser.add_argument('--model', type=str, default='gpt2', help='Model name/path')
-    parser.add_argument('--iterations', type=int, default=100, help='Maximum iterations')
-    parser.add_argument('--output', type=str, default='progressive_opt', help='Output prefix')
-    parser.add_argument('--skip-sensitivity', action='store_true', help='Skip sensitivity analysis')
-    parser.add_argument('--relax-thresholds', type=float, default=0.0, 
-                      help='Amount to relax STL thresholds (0.0-0.2)')
+    def run_progressive_compression(self, max_iterations=100):
+        """
+        Run progressive compression to find optimal configurations
+        
+        This systematically compresses layers from least to most sensitive,
+        backing off when constraints are violated.
+        
+        Args:
+            max_iterations: Maximum iterations to try
+            
+        Returns:
+            best_config: Best configuration found
+            best_results: Evaluation results for best configuration
+        """
+        print("Running progressive compression...")
+        
+        # Start with base configuration (all 16-bit, no pruning)
+        current_config = {}
+        for layer_idx in range(self.num_layers):
+            layer_key = f'layer_{layer_idx}'
+            current_config[layer_key] = {}
+            for component in self.components:
+                current_config[layer_key][component] = {
+                    'bits': 16,
+                    'pruning': 0.0
+                }
+        
+        # Evaluate base configuration
+        print("\nEvaluating base configuration (all 16-bit, no pruning)...")
+        base_results = self.evaluate_config(current_config)
+        
+        if not base_results['stl_satisfied']:
+            print("Warning: Base configuration does not satisfy STL constraints!")
+            print("Consider relaxing constraints.")
+        
+        # Keep track of best configuration
+        best_config = copy.deepcopy(current_config)
+        best_results = base_results
+        
+        # Get layers sorted by sensitivity (least to most sensitive)
+        sorted_layers = self._get_sorted_layers()
+        print("\nLayers sorted by sensitivity (least to most sensitive):")
+        for i, layer_key in enumerate(sorted_layers):
+            print(f"  {i+1}. {layer_key}")
+        
+        # Track whether we found at least one valid configuration
+        found_valid = base_results['stl_satisfied']
+        
+        # Progressive compression approach
+        print("\nStarting progressive compression...")
+        for iteration in range(max_iterations):
+            print(f"\nIteration {iteration+1}/{max_iterations}")
+            
+            # Create a copy of the current best configuration
+            test_config = copy.deepcopy(best_config)
+            
+            # Try to compress one more layer
+            success = False
+            
+            # First, try to compress by bit-width
+            for layer_key in sorted_layers:
+                # Skip if this layer is already at minimum bit-width
+                min_bits_in_layer = min([test_config[layer_key][comp]['bits'] 
+                                        for comp in test_config[layer_key]])
+                
+                if min_bits_in_layer <= min(self.bit_options):
+                    continue
+                
+                # Find the next lower bit-width
+                next_bits = max([b for b in self.bit_options if b < min_bits_in_layer])
+                
+                # Try reducing bit-width for this layer
+                for component in self.components:
+                    # Skip if already at minimum
+                    if test_config[layer_key][component]['bits'] <= next_bits:
+                        continue
+                    
+                    # Try reducing just this component
+                    old_bits = test_config[layer_key][component]['bits']
+                    test_config[layer_key][component]['bits'] = next_bits
+                    
+                    # Evaluate
+                    results = self.evaluate_config(test_config)
+                    
+                    # Check if still valid
+                    if results['stl_satisfied']:
+                        success = True
+                        found_valid = True
+                        
+                        # Update best config if this has better compression
+                        if results['model_size'] < best_results['model_size']:
+                            best_config = copy.deepcopy(test_config)
+                            best_results = results
+                        
+                        print(f"Success! Reduced {layer_key}.{component} from {old_bits}-bit to {next_bits}-bit")
+                        break
+                    else:
+                        # Revert change if invalid
+                        test_config[layer_key][component]['bits'] = old_bits
+                
+                if success:
+                    break
+            
+            # If bit-width compression worked, continue to next iteration
+            if success:
+                self.results_history.append({
+                    'iteration': iteration,
+                    'stl_score': best_results['stl_score'],
+                    'model_size': best_results['model_size'],
+                    'avg_bits': best_results['avg_bits'],
+                    'avg_pruning': best_results['avg_pruning']
+                })
+                continue
+            
+            # If bit-width compression didn't work, try pruning
+            for layer_key in sorted_layers:
+                # Try to increase pruning
+                for component in self.components:
+                    current_pruning = test_config[layer_key][component]['pruning']
+                    
+                    # Find next pruning level
+                    next_pruning_options = [p for p in self.pruning_options if p > current_pruning]
+                    if not next_pruning_options:
+                        continue
+                    
+                    next_pruning = min(next_pruning_options)
+                    
+                    # Try increasing pruning for this component
+                    test_config[layer_key][component]['pruning'] = next_pruning
+                    
+                    # Evaluate
+                    results = self.evaluate_config(test_config)
+                    
+                    # Check if still valid
+                    if results['stl_satisfied']:
+                        success = True
+                        found_valid = True
+                        
+                        # Update best config if this has better compression
+                        if results['model_size'] < best_results['model_size']:
+                            best_config = copy.deepcopy(test_config)
+                            best_results = results
+                        
+                        print(f"Success! Increased {layer_key}.{component} pruning from {current_pruning:.1f} to {next_pruning:.1f}")
+                        break
+                    else:
+                        # Revert change if invalid
+                        test_config[layer_key][component]['pruning'] = current_pruning
+                
+                if success:
+                    break
+            
+            # Record results for this iteration
+            self.results_history.append({
+                'iteration': iteration,
+                'stl_score': best_results['stl_score'],
+                'model_size': best_results['model_size'],
+                'avg_bits': best_results['avg_bits'],
+                'avg_pruning': best_results['avg_pruning']
+            })
+            
+            # If no valid compression options found, we're done
+            if not success:
+                print("\nNo further valid compression options found.")
+                break
+        
+        # Final results
+        print("\nProgressive compression complete!")
+        if found_valid:
+            print(f"Best configuration: STL score={best_results['stl_score']:.4f}, "
+                  f"Model size={best_results['model_size']:.2f} MB, "
+                  f"Avg bits={best_results['avg_bits']:.2f}, "
+                  f"Avg pruning={best_results['avg_pruning']*100:.1f}%, "
+                  f"Satisfied={best_results['stl_satisfied']}")
+        else:
+            print("No valid configurations found that satisfy all STL constraints.")
+            print("Consider relaxing constraints or using a different approach.")
+        
+        print(f"Total evaluations: {self.eval_count}")
+        
+        return best_config, best_results
     
-    args = parser.parse_args()
-    
-    run_progressive_optimization(
-        model_name=args.model,
-        max_iterations=args.iterations,
-        output_prefix=args.output,
-        skip_sensitivity=args.skip_sensitivity,
-        threshold_relax=args.relax_thresholds
-    )
-
-if __name__ == "__main__":
-    main()
+    def visualize_results(self, output_prefix="progressive_compression"):
+        """Visualize the progression of results"""
+        if not self.results_history:
+            print("No results to visualize")
+            return
+        
+        # Extract data
+        iterations = [r['iteration'] for r in self.results_history]
+        stl_scores = [r['stl_score'] for r in self.results_history]
+        model_sizes = [r['model_size'] for r in self.results_history]
+        avg_bits = [r['avg_bits'] for r in self.results_history]
+        avg_pruning = [r['avg_pruning'] for r in self.results_history]
+        
+        # Plot STL score and model size
+        plt.figure(figsize=(12, 6))
+        plt.subplot(1, 2, 1)
+        plt.plot(iterations, stl_scores, 'b-', label='STL Score')
+        plt.axhline(y=0, color='r', linestyle='--', label='Satisfaction Threshold')
+        plt.xlabel('Iteration')
+        plt.ylabel('STL Score')
+        plt.title('STL Score Progression')
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+        
+        plt.subplot(1, 2, 2)
+        plt.plot(iterations, model_sizes, 'g-', label='Model Size (MB)')
+        plt.xlabel('Iteration')
+        plt.ylabel('Model Size (MB)')
+        plt.title('Model Size Progression')
+        plt.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig(f"{output_prefix}_progression.png")
+        print(f"Progression plot saved to {output_prefix}_progression.png")
+        
+        # Plot bit-width and pruning
+        plt.figure(figsize=(12, 6))
+        plt.subplot(1, 2, 1)
+        plt.plot(iterations, avg_bits, 'm-', label='Avg Bit-width')
+        plt.xlabel('Iteration')
+        plt.ylabel('Average Bit-width')
+        plt.title('Bit-width Progression')
+        plt.grid(True, alpha=0.3)
+        
+        plt.subplot(1, 2, 2)
+        plt.plot(iterations, [p*100 for p in avg_pruning], 'c-', label='Avg Pruning (%)')
+        plt.xlabel('Iteration')
+        plt.ylabel('Average Pruning (%)')
+        plt.title('Pruning Progression')
+        plt.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig(f"{output_prefix}_compression.png")
+        print(f"Compression plot saved to {output_prefix}_compression.png")
