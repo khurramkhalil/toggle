@@ -1,0 +1,32 @@
+#!/bin/bash
+#SBATCH --partition=rss-gpu
+#SBATCH -N 1
+#SBATCH -c 12
+#SBATCH --gres=gpu:A100
+#SBATCH --export=all 
+#SBATCH --out=Hellbender-%j.out     
+# %j will substitute to the job's id
+#e.g. if you submitted from /home/username/softwaretesting your job would run in that directory.
+#SBATCH --output=output.txt%J_stdout.txt
+#SBATCH --error=error.txt%J_stderr.txt
+#SBATCH --time=10:00:00
+#SBATCH --job-name=TOGGLEA100%J
+#SBATCH --mail-user=khurram.khalil@missouri.edu
+#SBATCH --mail-type=ALL
+
+module load miniconda3/4.10.3_gcc_9.5.0                  # load the conda software
+source activate deepseek
+CUDA_VISIBLE_DEVICES=0 python scripts/run_optimization.py
+CUDA_VISIBLE_DEVICES=0 python toggle-gpu/toggle_progressive_integration_organized.py \
+  --model gpt2 \
+  --iterations 20000 \
+  --relax-thresholds 0.1 \
+  --output progressive_gpt2 \
+  --results-dir results
+
+
+#(executables) (options) (parameters)
+echo "this is a general submission script"
+echo "I've submitted my A100 batch job successfully"
+
+
