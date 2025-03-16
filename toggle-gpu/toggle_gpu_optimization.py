@@ -10,6 +10,7 @@ import numpy as np
 from tqdm import tqdm
 from datasets import load_dataset
 import random
+from datasets import load_dataset
 
 def load_evaluation_datasets(dataset_names=None, subset_size=50):
     """
@@ -22,6 +23,7 @@ def load_evaluation_datasets(dataset_names=None, subset_size=50):
     Returns:
         Dictionary of datasets by STL property
     """
+    
     # Default dataset mapping
     default_datasets = {
         'coherence': ['lambada'],
@@ -44,7 +46,8 @@ def load_evaluation_datasets(dataset_names=None, subset_size=50):
                 if dataset_name == 'lambada':
                     dataset = load_dataset("lambada", split='validation')
                 elif dataset_name == 'hotpot_qa':
-                    dataset = load_dataset("hotpot_qa", split='validation')
+                    # Specify config to fix the error
+                    dataset = load_dataset("hotpot_qa", 'distractor', split='validation')
                 elif dataset_name == 'coqa':
                     dataset = load_dataset("coqa", split='validation')
                 elif dataset_name == 'truthful_qa':
@@ -791,22 +794,123 @@ class GPUOptimizedSTLEvaluator:
     @torch.no_grad()
     def _evaluate_coherence_toy(self, model):
         """Fallback to toy dataset for coherence evaluation"""
-        return self._evaluate_sample(self.toggle.encoded_dataset[0], model)['coherence']
+        # Use the first sample from toy dataset
+        encoded_text = self.toggle.encoded_dataset[0]
+        
+        # Get outputs from the model
+        outputs = model(encoded_text, output_attentions=True, output_hidden_states=True)
+        logits = outputs.logits
+        probs = torch.softmax(logits, dim=-1)
+        
+        # Get base model outputs
+        base_outputs = self.toggle.base_model(encoded_text, output_attentions=True, output_hidden_states=True)
+        base_probs = torch.softmax(base_outputs.logits, dim=-1)
+        
+        # Evaluate coherence (simplified JSD calculation)
+        last_token_base_probs = base_probs[0, -1].cpu().numpy()
+        last_token_quant_probs = probs[0, -1].cpu().numpy()
+        
+        # Get top tokens
+        top_k = 100
+        base_top_indices = np.argsort(last_token_base_probs)[::-1][:top_k]
+        quant_top_indices = np.argsort(last_token_quant_probs)[::-1][:top_k]
+        
+        # Union of top indices
+        top_indices = np.union1d(base_top_indices, quant_top_indices)
+        
+        # Compute JSD
+        from scipy.spatial.distance import jensenshannon
+        base_subset = last_token_base_probs[top_indices]
+        quant_subset = last_token_quant_probs[top_indices]
+        
+        # Normalize
+        base_subset = base_subset / np.sum(base_subset)
+        quant_subset = quant_subset / np.sum(quant_subset)
+        
+        jsd = jensenshannon(base_subset, quant_subset)
+        
+        # Calculate robustness
+        return self.stl_thresholds['coherence'] - jsd
 
     @torch.no_grad()
     def _evaluate_attention_toy(self, model):
         """Fallback to toy dataset for attention evaluation"""
-        return self._evaluate_sample(self.toggle.encoded_dataset[0], model)['attention']
+        # Use the first sample from toy dataset
+        encoded_text = self.toggle.encoded_dataset[0]
+        
+        # Get outputs from the model with attention
+        outputs = model(encoded_text, output_attentions=True)
+        attentions = outputs.attentions
+        
+        # Get base model attention
+        base_outputs = self.toggle.base_model(encoded_text, output_attentions=True)
+        base_attentions = base_outputs.attentions
+        
+        # Compare attention patterns
+        similarities = []
+        for l in range(len(attentions)):
+            # Flatten attention maps
+            att_flat = attentions[l].view(-1).cpu().numpy()
+            base_att_flat = base_attentions[l].view(-1).cpu().numpy()
+            
+            # Calculate cosine similarity
+            sim = np.dot(att_flat, base_att_flat) / (np.linalg.norm(att_flat) * np.linalg.norm(base_att_flat))
+            similarities.append(sim)
+        
+        # Average similarity across layers
+        avg_similarity = sum(similarities) / len(similarities)
+        
+        # Calculate robustness
+        return avg_similarity - self.stl_thresholds['attention']
 
     @torch.no_grad()
     def _evaluate_context_toy(self, model):
         """Fallback to toy dataset for context evaluation"""
-        return self._evaluate_sample(self.toggle.encoded_dataset[0], model)['context']
+        # Use the first sample from toy dataset
+        encoded_text = self.toggle.encoded_dataset[0]
+        
+        # Get outputs from the model with hidden states
+        outputs = model(encoded_text, output_hidden_states=True)
+        hidden_states = outputs.hidden_states[-1][:, -1]  # Last token of last layer
+        
+        # Get base model hidden states
+        base_outputs = self.toggle.base_model(encoded_text, output_hidden_states=True)
+        base_hidden_states = base_outputs.hidden_states[-1][:, -1]
+        
+        # Calculate cosine similarity
+        hidden_flat = hidden_states.view(-1).cpu().numpy()
+        base_hidden_flat = base_hidden_states.view(-1).cpu().numpy()
+        
+        sim = np.dot(hidden_flat, base_hidden_flat) / (np.linalg.norm(hidden_flat) * np.linalg.norm(base_hidden_flat))
+        
+        # Calculate robustness
+        return sim - self.stl_thresholds['context']
 
     @torch.no_grad()
     def _evaluate_factual_toy(self, model):
         """Fallback to toy dataset for factual evaluation"""
-        return self._evaluate_sample(self.toggle.encoded_dataset[0], model)['factual']
+        # Use the first sample from toy dataset
+        encoded_text = self.toggle.encoded_dataset[0]
+        
+        # Get outputs from the model
+        outputs = model(encoded_text)
+        logits = outputs.logits[:, -1]
+        
+        # Get base model outputs
+        base_outputs = self.toggle.base_model(encoded_text)
+        base_logits = base_outputs.logits[:, -1]
+        
+        # Get most likely token from base model
+        max_idx = base_logits.argmax().item()
+        
+        # Calculate probability ratio
+        probs = torch.softmax(logits, dim=-1)
+        base_probs = torch.softmax(base_logits, dim=-1)
+        
+        prob_ratio = (probs[0, max_idx] / (base_probs[0, max_idx] + 1e-10)).item()
+        
+        # Calculate robustness
+        return prob_ratio - self.stl_thresholds['factual']
 
 # Integration function to replace STL evaluation in toggle_dynamic_poc.py
 def optimize_stl_evaluation(toggle_framework, use_real_datasets=False, subset_size=50):
