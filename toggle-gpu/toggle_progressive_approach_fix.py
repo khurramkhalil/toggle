@@ -1,7 +1,7 @@
 """
-Progressive compression approach for TOGGLE framework.
+Progressive compression approach for TOGGLE framework with memory optimization.
 This implements a systematic layer-by-layer compression strategy
-that guarantees finding STL-satisfied configurations.
+that guarantees finding STL-satisfied configurations while managing memory efficiently.
 """
 
 import torch
@@ -11,6 +11,7 @@ import time
 import random
 import copy
 import matplotlib.pyplot as plt
+import gc
 
 class ProgressiveCompression:
     """
@@ -32,9 +33,9 @@ class ProgressiveCompression:
         self.components = toggle_framework.components
         self.sensitivity_map = sensitivity_map
         
-        # Store original parameters for swapping
-        self.original_params = {}
-        self.store_original_parameters()
+        # Use checkpoint approach instead of storing all parameters
+        self.checkpoint_created = False
+        self.model_device = next(toggle_framework.base_model.parameters()).device
         
         # Set bit-width options in descending order (from high to low precision)
         self.bit_options = sorted(toggle_framework.bit_options, reverse=True)
@@ -48,22 +49,36 @@ class ProgressiveCompression:
         
         # Track results
         self.results_history = []
+        
+        print("Initializing progressive compression with memory-efficient implementation...")
     
-    def store_original_parameters(self):
-        """Store original model parameters for later restoration"""
-        print("Storing original model parameters...")
-        self.original_params = {}
-        with torch.no_grad():
-            for name, param in self.toggle.base_model.named_parameters():
-                if 'weight' in name:
-                    self.original_params[name] = param.data.clone()
+    def create_checkpoint(self):
+        """Create a checkpoint of the current model state"""
+        if self.checkpoint_created:
+            print("Checkpoint already exists, not creating a new one...")
+            return
+            
+        print("Creating model checkpoint for state restoration...")
+        # Use PyTorch's state_dict mechanism which is more memory efficient
+        self.model_checkpoint = self.toggle.base_model.state_dict()
+        self.checkpoint_created = True
+        
+        # Clear any unused memory
+        torch.cuda.empty_cache()
+        gc.collect()
     
-    def restore_original_parameters(self):
-        """Restore original model parameters"""
-        with torch.no_grad():
-            for name, param in self.toggle.base_model.named_parameters():
-                if name in self.original_params:
-                    param.data.copy_(self.original_params[name])
+    def restore_from_checkpoint(self):
+        """Restore model parameters from checkpoint"""
+        if not self.checkpoint_created:
+            print("Warning: No checkpoint to restore from!")
+            return
+            
+        # Load the state dict back into the model
+        self.toggle.base_model.load_state_dict(self.model_checkpoint)
+        
+        # Clear any unused memory
+        torch.cuda.empty_cache()
+        gc.collect()
 
     def _get_config_hash(self, config):
         """Create a deterministic hash for a configuration"""
@@ -81,6 +96,9 @@ class ProgressiveCompression:
     
     def _apply_config_with_swapping(self, config):
         """Apply configuration with parameter swapping for evaluation"""
+        # Restore from checkpoint first to ensure clean state
+        self.restore_from_checkpoint()
+        
         # Apply configuration to model using toggle's method
         for layer_idx in range(self.num_layers):
             layer_key = f'layer_{layer_idx}'
@@ -128,8 +146,8 @@ class ProgressiveCompression:
         start_event.record()
         
         # Ensure model is on the right device
-        if next(self.toggle.base_model.parameters()).device.type != 'cuda':
-            self.toggle.base_model.to('cuda')
+        if next(self.toggle.base_model.parameters()).device.type != self.model_device.type:
+            self.toggle.base_model.to(self.model_device)
             
         results = self.toggle.evaluate_stl_properties(self.toggle.base_model)
         
@@ -166,15 +184,16 @@ class ProgressiveCompression:
         # Add to cache
         self.eval_cache[config_hash] = results
         
-        # Restore original parameters
-        self.restore_original_parameters()
-        
         # Log evaluation
         status = "✓" if results['stl_satisfied'] else "✗"
         print(f"Eval #{self.eval_count}: STL={stl_score:.4f} {status}, "
               f"Size={model_size:.2f}MB, "
               f"Bits={avg_bits:.2f}, Pruning={avg_pruning*100:.1f}%, "
               f"Time={eval_time:.3f}s")
+        
+        # Clear memory
+        torch.cuda.empty_cache()
+        gc.collect()
         
         return results
     
@@ -249,6 +268,9 @@ class ProgressiveCompression:
             best_results: Evaluation results for best configuration
         """
         print("Running progressive compression...")
+        
+        # Create checkpoint for state restoration
+        self.create_checkpoint()
         
         # Start with base configuration (all 16-bit, no pruning)
         current_config = {}
