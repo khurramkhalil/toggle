@@ -76,9 +76,32 @@ class LayerSensitivityAnalyzer:
                 
                 # Apply pruning if specified
                 if pruning > 0:
+                    # Memory-efficient quantile calculation for large tensors
+                    try:
+                        # Try the direct method first for smaller tensors
+                        threshold = torch.quantile(torch.abs(modified_data.flatten()), pruning)
+                    except RuntimeError:
+                        # For large tensors, use sampling-based approach
+                        print(f"Using sampling-based quantile for large tensor: {name}")
+                        abs_values = torch.abs(modified_data)
+                        
+                        # Calculate tensor size
+                        tensor_size = abs_values.numel()
+                        
+                        # Determine sample size (1% of tensor or 10M elements, whichever is smaller)
+                        sample_size = min(int(tensor_size * 0.01), 10000000)
+                        
+                        # Generate random indices for sampling
+                        indices = torch.randperm(tensor_size, device=abs_values.device)[:sample_size]
+                        
+                        # Sample the tensor
+                        sampled_values = abs_values.flatten()[indices]
+                        
+                        # Calculate quantile on the sample
+                        threshold = torch.quantile(sampled_values, pruning)
+                    
                     # Create pruning mask based on magnitude
                     mask = torch.ones_like(modified_data)
-                    threshold = torch.quantile(torch.abs(modified_data.flatten()), pruning)
                     mask[torch.abs(modified_data) < threshold] = 0
                     # Apply mask
                     modified_data.mul_(mask)
