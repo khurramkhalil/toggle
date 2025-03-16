@@ -480,7 +480,13 @@ class GPUOptimizedSTLEvaluator:
                         
                         # Tokenize
                         inputs = self.toggle.tokenizer(context, return_tensors="pt").to(self.device)
-                        target_id = self.toggle.tokenizer.encode(' ' + target)[1]  # Get ID of the target token
+                        
+                        # Safely get the target token ID
+                        target_tokens = self.toggle.tokenizer.encode(' ' + target)
+                        if len(target_tokens) > 1:
+                            target_id = target_tokens[1]  # Get ID of the target token after BOS
+                        else:
+                            target_id = target_tokens[0]  # Fallback to first token
                         
                         examples.append({
                             'inputs': inputs,
@@ -500,19 +506,23 @@ class GPUOptimizedSTLEvaluator:
                     # Process HotpotQA dataset
                     examples = []
                     for item in dataset_info['data']:
-                        context = ' '.join(item['context']['sentences'])
-                        question = item['question']
-                        answer = item['answer']
-                        
-                        # Tokenize
-                        inputs = self.toggle.tokenizer(context + ' ' + question, return_tensors="pt").to(self.device)
-                        
-                        examples.append({
-                            'inputs': inputs,
-                            'answer': answer,
-                            'question': question,
-                            'context': context
-                        })
+                        try:
+                            context = ' '.join(item['context']['sentences'])
+                            question = item['question']
+                            answer = item['answer']
+                            
+                            # Tokenize
+                            inputs = self.toggle.tokenizer(context + ' ' + question, return_tensors="pt").to(self.device)
+                            
+                            examples.append({
+                                'inputs': inputs,
+                                'answer': answer,
+                                'question': question,
+                                'context': context
+                            })
+                        except Exception as e:
+                            print(f"Error processing HotpotQA example: {e}")
+                            continue
                     processed['attention'].append({
                         'name': dataset_info['name'],
                         'examples': examples
@@ -526,24 +536,28 @@ class GPUOptimizedSTLEvaluator:
                     # Process CoQA dataset
                     examples = []
                     for item in dataset_info['data']:
-                        story = item['story']
-                        questions = item['questions']
-                        answers = item['answers']
-                        
-                        # Use first few Q&A pairs
-                        for i in range(min(3, len(questions))):
-                            question = questions[i]
-                            answer = answers[i]
+                        try:
+                            story = item['story']
+                            questions = item['questions']
+                            answers = item['answers']
                             
-                            # Tokenize
-                            inputs = self.toggle.tokenizer(story + ' ' + question, return_tensors="pt").to(self.device)
-                            
-                            examples.append({
-                                'inputs': inputs,
-                                'answer': answer,
-                                'question': question,
-                                'story': story
-                            })
+                            # Use first few Q&A pairs
+                            for i in range(min(3, len(questions))):
+                                question = questions[i]
+                                answer = answers[i]['input_text']
+                                
+                                # Tokenize
+                                inputs = self.toggle.tokenizer(story + ' ' + question, return_tensors="pt").to(self.device)
+                                
+                                examples.append({
+                                    'inputs': inputs,
+                                    'answer': answer,
+                                    'question': question,
+                                    'story': story
+                                })
+                        except Exception as e:
+                            print(f"Error processing CoQA example: {e}")
+                            continue
                     processed['context'].append({
                         'name': dataset_info['name'],
                         'examples': examples
@@ -557,23 +571,37 @@ class GPUOptimizedSTLEvaluator:
                     # Process TruthfulQA dataset
                     examples = []
                     for item in dataset_info['data']:
-                        question = item['question']
-                        choices = item['mc1_targets']['choices']
-                        labels = item['mc1_targets']['labels']
-                        
-                        # Find correct answer
-                        correct_idx = labels.index(1) if 1 in labels else 0
-                        correct_answer = choices[correct_idx]
-                        
-                        # Tokenize
-                        inputs = self.toggle.tokenizer(question, return_tensors="pt").to(self.device)
-                        
-                        examples.append({
-                            'inputs': inputs,
-                            'choices': choices,
-                            'correct_answer': correct_answer,
-                            'question': question
-                        })
+                        try:
+                            question = item['question']
+                            choices = item['mc1_targets']['choices']
+                            labels = item['mc1_targets']['labels']
+                            
+                            # Find correct answer
+                            correct_idx = labels.index(1) if 1 in labels else 0
+                            correct_answer = choices[correct_idx]
+                            
+                            # Tokenize
+                            inputs = self.toggle.tokenizer(question, return_tensors="pt").to(self.device)
+                            
+                            # Get choice tokens - with safe indexing
+                            choice_ids = []
+                            for choice in choices:
+                                tokens = self.toggle.tokenizer.encode(' ' + choice)
+                                if len(tokens) > 1:
+                                    choice_ids.append(tokens[1])
+                                else:
+                                    choice_ids.append(tokens[0])
+                            
+                            examples.append({
+                                'inputs': inputs,
+                                'choices': choices,
+                                'choice_ids': choice_ids,
+                                'correct_answer': correct_answer,
+                                'question': question
+                            })
+                        except Exception as e:
+                            print(f"Error processing TruthfulQA example: {e}")
+                            continue
                     processed['factual'].append({
                         'name': dataset_info['name'],
                         'examples': examples
@@ -597,31 +625,35 @@ class GPUOptimizedSTLEvaluator:
                 examples = dataset['examples']
                 
                 for example in examples:
-                    inputs = example['inputs']
-                    target_id = example['target_id']
-                    
-                    # Get model prediction
-                    outputs = model(**inputs)
-                    logits = outputs.logits
-                    probs = F.softmax(logits[:, -1], dim=-1)
-                    
-                    # Check probability of correct token
-                    prob_correct = probs[0, target_id].item()
-                    
-                    # Get base model prediction
-                    base_outputs = self.toggle.base_model(**inputs)
-                    base_logits = base_outputs.logits
-                    base_probs = F.softmax(base_logits[:, -1], dim=-1)
-                    
-                    # Check probability of correct token in base model
-                    base_prob_correct = base_probs[0, target_id].item()
-                    
-                    # Calculate coherence score (ratio of probabilities)
-                    coherence_score = prob_correct / (base_prob_correct + 1e-10)
-                    
-                    # Calculate robustness
-                    coherence_rob = coherence_score - self.stl_thresholds['coherence']
-                    all_robustness['coherence'].append(coherence_rob)
+                    try:
+                        inputs = example['inputs']
+                        target_id = example['target_id']
+                        
+                        # Get model prediction
+                        outputs = model(**inputs)
+                        logits = outputs.logits
+                        probs = F.softmax(logits[:, -1], dim=-1)
+                        
+                        # Check probability of correct token
+                        prob_correct = probs[0, target_id].item()
+                        
+                        # Get base model prediction
+                        base_outputs = self.toggle.base_model(**inputs)
+                        base_logits = base_outputs.logits
+                        base_probs = F.softmax(base_logits[:, -1], dim=-1)
+                        
+                        # Check probability of correct token in base model
+                        base_prob_correct = base_probs[0, target_id].item()
+                        
+                        # Calculate coherence score (ratio of probabilities)
+                        coherence_score = prob_correct / (base_prob_correct + 1e-10)
+                        
+                        # Calculate robustness
+                        coherence_rob = coherence_score - self.stl_thresholds['coherence']
+                        all_robustness['coherence'].append(coherence_rob)
+                    except Exception as e:
+                        print(f"Error evaluating coherence example: {e}")
+                        continue
         
         # Evaluate attention using HotpotQA (simplified)
         if 'attention' in self.processed_datasets:
@@ -629,33 +661,37 @@ class GPUOptimizedSTLEvaluator:
                 examples = dataset['examples']
                 
                 for example in examples:
-                    inputs = example['inputs']
-                    
-                    # Get model outputs with attention
-                    outputs = model(**inputs, output_attentions=True)
-                    attentions = outputs.attentions
-                    
-                    # Get base model outputs with attention
-                    base_outputs = self.toggle.base_model(**inputs, output_attentions=True)
-                    base_attentions = base_outputs.attentions
-                    
-                    # Compare attention patterns
-                    attention_similarities = []
-                    for l in range(len(attentions)):
-                        # Flatten attention maps
-                        att_flat = attentions[l].view(-1)
-                        base_att_flat = base_attentions[l].view(-1)
+                    try:
+                        inputs = example['inputs']
                         
-                        # Calculate cosine similarity
-                        similarity = F.cosine_similarity(att_flat.unsqueeze(0), base_att_flat.unsqueeze(0))
-                        attention_similarities.append(similarity.item())
-                    
-                    # Average similarity across layers
-                    avg_similarity = sum(attention_similarities) / len(attention_similarities)
-                    
-                    # Calculate robustness
-                    attention_rob = avg_similarity - self.stl_thresholds['attention']
-                    all_robustness['attention'].append(attention_rob)
+                        # Get model outputs with attention
+                        outputs = model(**inputs, output_attentions=True)
+                        attentions = outputs.attentions
+                        
+                        # Get base model outputs with attention
+                        base_outputs = self.toggle.base_model(**inputs, output_attentions=True)
+                        base_attentions = base_outputs.attentions
+                        
+                        # Compare attention patterns
+                        attention_similarities = []
+                        for l in range(len(attentions)):
+                            # Flatten attention maps
+                            att_flat = attentions[l].view(-1)
+                            base_att_flat = base_attentions[l].view(-1)
+                            
+                            # Calculate cosine similarity
+                            similarity = F.cosine_similarity(att_flat.unsqueeze(0), base_att_flat.unsqueeze(0))
+                            attention_similarities.append(similarity.item())
+                        
+                        # Average similarity across layers
+                        avg_similarity = sum(attention_similarities) / len(attention_similarities)
+                        
+                        # Calculate robustness
+                        attention_rob = avg_similarity - self.stl_thresholds['attention']
+                        all_robustness['attention'].append(attention_rob)
+                    except Exception as e:
+                        print(f"Error evaluating attention example: {e}")
+                        continue
         
         # Evaluate context using CoQA (simplified)
         if 'context' in self.processed_datasets:
@@ -663,22 +699,26 @@ class GPUOptimizedSTLEvaluator:
                 examples = dataset['examples']
                 
                 for example in examples:
-                    inputs = example['inputs']
-                    
-                    # Get model hidden states
-                    outputs = model(**inputs, output_hidden_states=True)
-                    hidden_states = outputs.hidden_states[-1][:, -1]  # Last token of last layer
-                    
-                    # Get base model hidden states
-                    base_outputs = self.toggle.base_model(**inputs, output_hidden_states=True)
-                    base_hidden_states = base_outputs.hidden_states[-1][:, -1]
-                    
-                    # Calculate cosine similarity
-                    similarity = F.cosine_similarity(hidden_states, base_hidden_states)
-                    
-                    # Calculate robustness
-                    context_rob = similarity.item() - self.stl_thresholds['context']
-                    all_robustness['context'].append(context_rob)
+                    try:
+                        inputs = example['inputs']
+                        
+                        # Get model hidden states
+                        outputs = model(**inputs, output_hidden_states=True)
+                        hidden_states = outputs.hidden_states[-1][:, -1]  # Last token of last layer
+                        
+                        # Get base model hidden states
+                        base_outputs = self.toggle.base_model(**inputs, output_hidden_states=True)
+                        base_hidden_states = base_outputs.hidden_states[-1][:, -1]
+                        
+                        # Calculate cosine similarity
+                        similarity = F.cosine_similarity(hidden_states, base_hidden_states)
+                        
+                        # Calculate robustness
+                        context_rob = similarity.item() - self.stl_thresholds['context']
+                        all_robustness['context'].append(context_rob)
+                    except Exception as e:
+                        print(f"Error evaluating context example: {e}")
+                        continue
         
         # Evaluate factual using TruthfulQA (simplified)
         if 'factual' in self.processed_datasets:
@@ -686,31 +726,32 @@ class GPUOptimizedSTLEvaluator:
                 examples = dataset['examples']
                 
                 for example in examples:
-                    inputs = example['inputs']
-                    choices = example['choices']
-                    
-                    # Get logits for question
-                    outputs = model(**inputs)
-                    logits = outputs.logits[:, -1]
-                    
-                    # Get base model logits
-                    base_outputs = self.toggle.base_model(**inputs)
-                    base_logits = base_outputs.logits[:, -1]
-                    
-                    # Get choice tokens
-                    choice_ids = [self.toggle.tokenizer.encode(' ' + choice)[1] for choice in choices]
-                    
-                    # Get probabilities for choices
-                    probs = F.softmax(logits, dim=-1)[0, choice_ids].cpu().numpy()
-                    base_probs = F.softmax(base_logits, dim=-1)[0, choice_ids].cpu().numpy()
-                    
-                    # Calculate probability ratio
-                    max_idx = np.argmax(base_probs)
-                    prob_ratio = probs[max_idx] / (base_probs[max_idx] + 1e-10)
-                    
-                    # Calculate robustness
-                    factual_rob = prob_ratio - self.stl_thresholds['factual']
-                    all_robustness['factual'].append(factual_rob)
+                    try:
+                        inputs = example['inputs']
+                        choice_ids = example['choice_ids']
+                        
+                        # Get logits for question
+                        outputs = model(**inputs)
+                        logits = outputs.logits[:, -1]
+                        
+                        # Get base model logits
+                        base_outputs = self.toggle.base_model(**inputs)
+                        base_logits = base_outputs.logits[:, -1]
+                        
+                        # Get probabilities for choices
+                        probs = F.softmax(logits, dim=-1)[0, choice_ids].cpu().numpy()
+                        base_probs = F.softmax(base_logits, dim=-1)[0, choice_ids].cpu().numpy()
+                        
+                        # Calculate probability ratio
+                        max_idx = np.argmax(base_probs)
+                        prob_ratio = probs[max_idx] / (base_probs[max_idx] + 1e-10)
+                        
+                        # Calculate robustness
+                        factual_rob = prob_ratio - self.stl_thresholds['factual']
+                        all_robustness['factual'].append(factual_rob)
+                    except Exception as e:
+                        print(f"Error evaluating factual example: {e}")
+                        continue
         
         # Calculate minimum robustness for each property
         min_robustness = {}
@@ -719,6 +760,7 @@ class GPUOptimizedSTLEvaluator:
                 min_robustness[property_name] = min(values)
             else:
                 # Fallback to toy dataset evaluation if no examples
+                print(f"No valid {property_name} examples, falling back to toy dataset")
                 if property_name == 'coherence':
                     min_robustness[property_name] = self._evaluate_coherence_toy(model)
                 elif property_name == 'attention':
