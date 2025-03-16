@@ -101,7 +101,7 @@ class ResultsManager:
         results_path = os.path.join(model_dir, results_filename)
         
         with open(results_path, 'w') as f:
-            json.dump(results, f, indent=2)
+            json.dump(str(results), f, indent=2)
         
         # Save config to configs directory
         config_filename = f"{safe_name}_config_{timestamp}.json"
