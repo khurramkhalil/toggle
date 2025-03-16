@@ -8,6 +8,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 import time
+import random
 import copy
 import matplotlib.pyplot as plt
 
@@ -232,7 +233,7 @@ class ProgressiveCompression:
         
         return [item[0] for item in sorted_items]
     
-    def run_progressive_compression(self, max_iterations=100):
+    def run_progressive_compression(self, max_iterations=100, force_all_iterations=True):
         """
         Run progressive compression to find optimal configurations
         
@@ -241,6 +242,7 @@ class ProgressiveCompression:
         
         Args:
             max_iterations: Maximum iterations to try
+            force_all_iterations: Whether to continue exploring for all iterations even if stuck
             
         Returns:
             best_config: Best configuration found
@@ -282,6 +284,8 @@ class ProgressiveCompression:
         
         # Progressive compression approach
         print("\nStarting progressive compression...")
+        stuck_iterations = 0
+        
         for iteration in range(max_iterations):
             print(f"\nIteration {iteration+1}/{max_iterations}")
             
@@ -393,10 +397,60 @@ class ProgressiveCompression:
                 'avg_pruning': best_results['avg_pruning']
             })
             
-            # If no valid compression options found, we're done
+            # If no valid compression options found
             if not success:
-                print("\nNo further valid compression options found.")
-                break
+                stuck_iterations += 1
+                print(f"\nNo further valid compression options found in this iteration. (Stuck for {stuck_iterations} iterations)")
+                
+                if force_all_iterations and iteration < max_iterations - 1:
+                    # Try a different approach - randomly modify a component to escape local minimum
+                    if stuck_iterations % 5 == 0:  # Every 5 stuck iterations, try something more aggressive
+                        print("Trying random perturbation to escape local minimum...")
+                        
+                        # Randomly select a layer
+                        layer_key = random.choice(sorted_layers)
+                        
+                        # Randomly select a component
+                        component = random.choice(self.components)
+                        
+                        # Try slightly increasing bit-width in exchange for more aggressive pruning
+                        current_bits = test_config[layer_key][component]['bits']
+                        current_pruning = test_config[layer_key][component]['pruning']
+                        
+                        # Find next higher bit-width if possible
+                        higher_bits_options = [b for b in self.bit_options if b > current_bits]
+                        if higher_bits_options:
+                            next_higher_bits = min(higher_bits_options)
+                            
+                            # Find more aggressive pruning
+                            next_pruning_options = [p for p in self.pruning_options if p > current_pruning + 0.1]
+                            if next_pruning_options:
+                                next_pruning = min(next_pruning_options)
+                                
+                                print(f"Trying {layer_key}.{component}: bits {current_bits}→{next_higher_bits}, pruning {current_pruning:.1f}→{next_pruning:.1f}")
+                                
+                                # Apply changes
+                                test_config[layer_key][component]['bits'] = next_higher_bits
+                                test_config[layer_key][component]['pruning'] = next_pruning
+                                
+                                # Evaluate
+                                results = self.evaluate_config(test_config)
+                                
+                                # Check if valid
+                                if results['stl_satisfied']:
+                                    success = True
+                                    found_valid = True
+                                    best_config = copy.deepcopy(test_config)
+                                    best_results = results
+                                    print(f"Success! Escaped local minimum with trade-off strategy")
+                                    stuck_iterations = 0
+                                else:
+                                    # Revert changes if invalid
+                                    test_config[layer_key][component]['bits'] = current_bits
+                                    test_config[layer_key][component]['pruning'] = current_pruning
+                else:
+                    print("\nNo further valid compression options found. Stopping early.")
+                    break
         
         # Final results
         print("\nProgressive compression complete!")
