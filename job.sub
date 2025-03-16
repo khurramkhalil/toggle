@@ -2,6 +2,7 @@
 #SBATCH --partition=rss-gpu
 #SBATCH -N 1
 #SBATCH -c 12
+#SBATCH --mem 100G
 #SBATCH --gres=gpu:A100
 #SBATCH --export=all 
 #SBATCH --out=Hellbender-%j.out     
@@ -18,10 +19,10 @@ module load miniconda3/4.10.3_gcc_9.5.0                  # load the conda softwa
 source activate deepseek
 CUDA_VISIBLE_DEVICES=0 python scripts/run_optimization.py
 CUDA_VISIBLE_DEVICES=0 python toggle-gpu/toggle_progressive_integration_organized.py \
-  --model deepseek-ai/deepseek-llm-7b-base \
+  --model meta-llama/Llama-3.1-8B \
   --iterations 100000 \
   --relax-thresholds 0.1 \
-  --output progressive_gpt2 \
+  --output progressive_llama3.18b \
   --results-dir results
 
 
