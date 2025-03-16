@@ -1,0 +1,2 @@
+model_name,timestamp,stl_score,model_size,avg_bits,avg_pruning,stl_satisfied,threshold_relaxation,robustness_coherence,robustness_attention,robustness_context,robustness_factual
+gpt2,2025-03-15 22:06:57,0.0003996574960183352,154.7771484375,11.395833333333334,0.34375,True,0.1,0.0003996574960183352,0.22567500174045563,0.24018755555152893,0.15006564557552338
