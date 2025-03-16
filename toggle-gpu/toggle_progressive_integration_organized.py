@@ -19,7 +19,9 @@ from toggle_results_organization import ResultsManager
 def run_progressive_optimization(model_name, max_iterations=100, 
                                 output_prefix="progressive_opt", 
                                 skip_sensitivity=False, threshold_relax=0.0,
-                                results_dir="results"):
+                                results_dir="results",
+                                use_real_datasets=False,
+                                dataset_subset_size=50):
     """
     Run progressive compression optimization with GPU acceleration
     and organized results storage.
@@ -65,7 +67,13 @@ def run_progressive_optimization(model_name, max_iterations=100,
     
     # Apply GPU optimization
     print("\n=== Applying GPU Optimization ===")
-    gpu_evaluator = optimize_stl_evaluation(toggle)
+    # Apply GPU optimization
+    print("\n=== Applying GPU Optimization ===")
+    gpu_evaluator = optimize_stl_evaluation(
+        toggle, 
+        use_real_datasets=use_real_datasets,
+        subset_size=dataset_subset_size
+    )
     
     # Measure GPU utilization
     start_event = torch.cuda.Event(enable_timing=True)
@@ -199,6 +207,10 @@ def main():
                       help='Amount to relax STL thresholds (0.0-0.2)')
     parser.add_argument('--results-dir', type=str, default='results',
                       help='Directory for storing results')
+    parser.add_argument('--use-real-datasets', action='store_true',
+                      help='Use real datasets instead of toy dataset')
+    parser.add_argument('--dataset-subset-size', type=int, default=50,
+                      help='Number of examples to use from each dataset')
     
     args = parser.parse_args()
     
@@ -208,7 +220,9 @@ def main():
         output_prefix=args.output,
         skip_sensitivity=args.skip_sensitivity,
         threshold_relax=args.relax_thresholds,
-        results_dir=args.results_dir
+        results_dir=args.results_dir,
+        use_real_datasets=args.use_real_datasets,
+        dataset_subset_size=args.dataset_subset_size
     )
 
 if __name__ == "__main__":

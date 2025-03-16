@@ -8,22 +8,108 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
+from datasets import load_dataset
+import random
 
+def load_evaluation_datasets(dataset_names=None, subset_size=50):
+    """
+    Load datasets for STL evaluation.
+    
+    Args:
+        dataset_names: List of dataset names to load (default: predefined set)
+        subset_size: Number of examples to use from each dataset
+        
+    Returns:
+        Dictionary of datasets by STL property
+    """
+    # Default dataset mapping
+    default_datasets = {
+        'coherence': ['lambada'],
+        'attention': ['hotpot_qa'],
+        'context': ['coqa'],
+        'factual': ['truthful_qa']
+    }
+    
+    datasets = {}
+    
+    # Load specified datasets or defaults
+    dataset_map = dataset_names or default_datasets
+    
+    for property_name, dataset_list in dataset_map.items():
+        datasets[property_name] = []
+        
+        for dataset_name in dataset_list:
+            try:
+                # Load dataset (using HuggingFace datasets)
+                if dataset_name == 'lambada':
+                    dataset = load_dataset("lambada", split='validation')
+                elif dataset_name == 'hotpot_qa':
+                    dataset = load_dataset("hotpot_qa", split='validation')
+                elif dataset_name == 'coqa':
+                    dataset = load_dataset("coqa", split='validation')
+                elif dataset_name == 'truthful_qa':
+                    dataset = load_dataset("truthful_qa", 'multiple_choice', split='validation')
+                else:
+                    dataset = load_dataset(dataset_name)
+                    # Get appropriate split
+                    split = 'validation' if 'validation' in dataset else 'test' if 'test' in dataset else 'train'
+                    dataset = dataset[split]
+                
+                # Take subset
+                if len(dataset) > subset_size:
+                    indices = random.sample(range(len(dataset)), subset_size)
+                    subset = dataset.select(indices)
+                else:
+                    subset = dataset
+                
+                # Add to property-specific datasets
+                datasets[property_name].append({
+                    'name': dataset_name,
+                    'data': subset
+                })
+                
+                print(f"Loaded {len(subset)} examples from {dataset_name} for {property_name}")
+                
+            except Exception as e:
+                print(f"Error loading {dataset_name}: {str(e)}")
+                print("Using toy dataset instead")
+                # Create a fallback toy dataset for this property
+                datasets[property_name].append({
+                    'name': 'toy_dataset',
+                    'data': None  # Will use the toggle's toy dataset
+                })
+    
+    return datasets
 class GPUOptimizedSTLEvaluator:
     """
     Optimized STL evaluator that leverages GPU acceleration.
     """
     
-    def __init__(self, toggle_framework):
+    def __init__(self, toggle_framework, use_real_datasets=False, subset_size=50):
         """
         Initialize the GPU-optimized STL evaluator.
         
         Args:
             toggle_framework: DynamicPrecisionTransformer instance
+            use_real_datasets: Whether to use real datasets instead of toy dataset
+            subset_size: Number of examples to use from each dataset
         """
         self.toggle = toggle_framework
         self.device = next(toggle_framework.base_model.parameters()).device
         self.stl_thresholds = toggle_framework.stl_thresholds
+        
+        # Load real datasets if requested
+        self.use_real_datasets = use_real_datasets
+        if use_real_datasets:
+            print("Loading evaluation datasets...")
+            self.datasets = load_evaluation_datasets(subset_size=subset_size)
+            # Process datasets
+            self.processed_datasets = self._process_datasets(self.datasets)
+            print("Datasets loaded and processed")
+        else:
+            self.datasets = None
+            self.processed_datasets = None
+            print("Using toy dataset for evaluation")
         
         # Ensure model is on GPU
         if self.device.type != 'cuda':
@@ -43,7 +129,11 @@ class GPUOptimizedSTLEvaluator:
         Returns:
             Dictionary with evaluation results
         """
-        # Process all encoded dataset samples
+        # If using real datasets
+        if self.use_real_datasets and self.processed_datasets:
+            return self._evaluate_with_real_datasets(model)
+        
+        # Otherwise use the toy dataset
         if batch_size and len(self.toggle.encoded_dataset) > batch_size:
             # Batch processing for large datasets
             return self._evaluate_in_batches(model, batch_size)
@@ -370,22 +460,332 @@ class GPUOptimizedSTLEvaluator:
         factual_rob = ratio.item() - self.stl_thresholds['factual']
         
         return factual_rob
+    
+    def _process_datasets(self, datasets):
+        """Process datasets for efficient evaluation"""
+        processed = {}
+        
+        # Process coherence datasets
+        if 'coherence' in datasets:
+            processed['coherence'] = []
+            for dataset_info in datasets['coherence']:
+                if dataset_info['name'] == 'lambada':
+                    # Process LAMBADA dataset
+                    examples = []
+                    for item in dataset_info['data']:
+                        text = item['text']
+                        # Get all but the last token for context
+                        context = ' '.join(text.split()[:-1])
+                        target = text.split()[-1]
+                        
+                        # Tokenize
+                        inputs = self.toggle.tokenizer(context, return_tensors="pt").to(self.device)
+                        target_id = self.toggle.tokenizer.encode(' ' + target)[1]  # Get ID of the target token
+                        
+                        examples.append({
+                            'inputs': inputs,
+                            'target_id': target_id,
+                            'full_text': text
+                        })
+                    processed['coherence'].append({
+                        'name': dataset_info['name'],
+                        'examples': examples
+                    })
+            
+        # Process attention datasets
+        if 'attention' in datasets:
+            processed['attention'] = []
+            for dataset_info in datasets['attention']:
+                if dataset_info['name'] == 'hotpot_qa':
+                    # Process HotpotQA dataset
+                    examples = []
+                    for item in dataset_info['data']:
+                        context = ' '.join(item['context']['sentences'])
+                        question = item['question']
+                        answer = item['answer']
+                        
+                        # Tokenize
+                        inputs = self.toggle.tokenizer(context + ' ' + question, return_tensors="pt").to(self.device)
+                        
+                        examples.append({
+                            'inputs': inputs,
+                            'answer': answer,
+                            'question': question,
+                            'context': context
+                        })
+                    processed['attention'].append({
+                        'name': dataset_info['name'],
+                        'examples': examples
+                    })
+        
+        # Process context datasets
+        if 'context' in datasets:
+            processed['context'] = []
+            for dataset_info in datasets['context']:
+                if dataset_info['name'] == 'coqa':
+                    # Process CoQA dataset
+                    examples = []
+                    for item in dataset_info['data']:
+                        story = item['story']
+                        questions = item['questions']
+                        answers = item['answers']
+                        
+                        # Use first few Q&A pairs
+                        for i in range(min(3, len(questions))):
+                            question = questions[i]
+                            answer = answers[i]
+                            
+                            # Tokenize
+                            inputs = self.toggle.tokenizer(story + ' ' + question, return_tensors="pt").to(self.device)
+                            
+                            examples.append({
+                                'inputs': inputs,
+                                'answer': answer,
+                                'question': question,
+                                'story': story
+                            })
+                    processed['context'].append({
+                        'name': dataset_info['name'],
+                        'examples': examples
+                    })
+        
+        # Process factual datasets
+        if 'factual' in datasets:
+            processed['factual'] = []
+            for dataset_info in datasets['factual']:
+                if dataset_info['name'] == 'truthful_qa':
+                    # Process TruthfulQA dataset
+                    examples = []
+                    for item in dataset_info['data']:
+                        question = item['question']
+                        choices = item['mc1_targets']['choices']
+                        labels = item['mc1_targets']['labels']
+                        
+                        # Find correct answer
+                        correct_idx = labels.index(1) if 1 in labels else 0
+                        correct_answer = choices[correct_idx]
+                        
+                        # Tokenize
+                        inputs = self.toggle.tokenizer(question, return_tensors="pt").to(self.device)
+                        
+                        examples.append({
+                            'inputs': inputs,
+                            'choices': choices,
+                            'correct_answer': correct_answer,
+                            'question': question
+                        })
+                    processed['factual'].append({
+                        'name': dataset_info['name'],
+                        'examples': examples
+                    })
+        
+        return processed
 
+    @torch.no_grad()
+    def _evaluate_with_real_datasets(self, model):
+        """Evaluate STL properties using real datasets"""
+        all_robustness = {
+            'coherence': [],
+            'attention': [],
+            'context': [],
+            'factual': []
+        }
+        
+        # Evaluate coherence using LAMBADA
+        if 'coherence' in self.processed_datasets:
+            for dataset in self.processed_datasets['coherence']:
+                examples = dataset['examples']
+                
+                for example in examples:
+                    inputs = example['inputs']
+                    target_id = example['target_id']
+                    
+                    # Get model prediction
+                    outputs = model(**inputs)
+                    logits = outputs.logits
+                    probs = F.softmax(logits[:, -1], dim=-1)
+                    
+                    # Check probability of correct token
+                    prob_correct = probs[0, target_id].item()
+                    
+                    # Get base model prediction
+                    base_outputs = self.toggle.base_model(**inputs)
+                    base_logits = base_outputs.logits
+                    base_probs = F.softmax(base_logits[:, -1], dim=-1)
+                    
+                    # Check probability of correct token in base model
+                    base_prob_correct = base_probs[0, target_id].item()
+                    
+                    # Calculate coherence score (ratio of probabilities)
+                    coherence_score = prob_correct / (base_prob_correct + 1e-10)
+                    
+                    # Calculate robustness
+                    coherence_rob = coherence_score - self.stl_thresholds['coherence']
+                    all_robustness['coherence'].append(coherence_rob)
+        
+        # Evaluate attention using HotpotQA (simplified)
+        if 'attention' in self.processed_datasets:
+            for dataset in self.processed_datasets['attention']:
+                examples = dataset['examples']
+                
+                for example in examples:
+                    inputs = example['inputs']
+                    
+                    # Get model outputs with attention
+                    outputs = model(**inputs, output_attentions=True)
+                    attentions = outputs.attentions
+                    
+                    # Get base model outputs with attention
+                    base_outputs = self.toggle.base_model(**inputs, output_attentions=True)
+                    base_attentions = base_outputs.attentions
+                    
+                    # Compare attention patterns
+                    attention_similarities = []
+                    for l in range(len(attentions)):
+                        # Flatten attention maps
+                        att_flat = attentions[l].view(-1)
+                        base_att_flat = base_attentions[l].view(-1)
+                        
+                        # Calculate cosine similarity
+                        similarity = F.cosine_similarity(att_flat.unsqueeze(0), base_att_flat.unsqueeze(0))
+                        attention_similarities.append(similarity.item())
+                    
+                    # Average similarity across layers
+                    avg_similarity = sum(attention_similarities) / len(attention_similarities)
+                    
+                    # Calculate robustness
+                    attention_rob = avg_similarity - self.stl_thresholds['attention']
+                    all_robustness['attention'].append(attention_rob)
+        
+        # Evaluate context using CoQA (simplified)
+        if 'context' in self.processed_datasets:
+            for dataset in self.processed_datasets['context']:
+                examples = dataset['examples']
+                
+                for example in examples:
+                    inputs = example['inputs']
+                    
+                    # Get model hidden states
+                    outputs = model(**inputs, output_hidden_states=True)
+                    hidden_states = outputs.hidden_states[-1][:, -1]  # Last token of last layer
+                    
+                    # Get base model hidden states
+                    base_outputs = self.toggle.base_model(**inputs, output_hidden_states=True)
+                    base_hidden_states = base_outputs.hidden_states[-1][:, -1]
+                    
+                    # Calculate cosine similarity
+                    similarity = F.cosine_similarity(hidden_states, base_hidden_states)
+                    
+                    # Calculate robustness
+                    context_rob = similarity.item() - self.stl_thresholds['context']
+                    all_robustness['context'].append(context_rob)
+        
+        # Evaluate factual using TruthfulQA (simplified)
+        if 'factual' in self.processed_datasets:
+            for dataset in self.processed_datasets['factual']:
+                examples = dataset['examples']
+                
+                for example in examples:
+                    inputs = example['inputs']
+                    choices = example['choices']
+                    
+                    # Get logits for question
+                    outputs = model(**inputs)
+                    logits = outputs.logits[:, -1]
+                    
+                    # Get base model logits
+                    base_outputs = self.toggle.base_model(**inputs)
+                    base_logits = base_outputs.logits[:, -1]
+                    
+                    # Get choice tokens
+                    choice_ids = [self.toggle.tokenizer.encode(' ' + choice)[1] for choice in choices]
+                    
+                    # Get probabilities for choices
+                    probs = F.softmax(logits, dim=-1)[0, choice_ids].cpu().numpy()
+                    base_probs = F.softmax(base_logits, dim=-1)[0, choice_ids].cpu().numpy()
+                    
+                    # Calculate probability ratio
+                    max_idx = np.argmax(base_probs)
+                    prob_ratio = probs[max_idx] / (base_probs[max_idx] + 1e-10)
+                    
+                    # Calculate robustness
+                    factual_rob = prob_ratio - self.stl_thresholds['factual']
+                    all_robustness['factual'].append(factual_rob)
+        
+        # Calculate minimum robustness for each property
+        min_robustness = {}
+        for property_name, values in all_robustness.items():
+            if values:
+                min_robustness[property_name] = min(values)
+            else:
+                # Fallback to toy dataset evaluation if no examples
+                if property_name == 'coherence':
+                    min_robustness[property_name] = self._evaluate_coherence_toy(model)
+                elif property_name == 'attention':
+                    min_robustness[property_name] = self._evaluate_attention_toy(model)
+                elif property_name == 'context':
+                    min_robustness[property_name] = self._evaluate_context_toy(model)
+                elif property_name == 'factual':
+                    min_robustness[property_name] = self._evaluate_factual_toy(model)
+        
+        # Calculate average metrics
+        avg_metrics = {}
+        for property_name, values in all_robustness.items():
+            if values:
+                avg_metrics[property_name] = sum(values) / len(values)
+            else:
+                avg_metrics[property_name] = min_robustness[property_name]
+        
+        # Calculate overall STL score
+        stl_score = min(min_robustness.values())
+        
+        return {
+            'metrics': avg_metrics,
+            'robustness': min_robustness,
+            'stl_score': stl_score,
+            'stl_satisfied': stl_score >= 0
+        }
+
+    @torch.no_grad()
+    def _evaluate_coherence_toy(self, model):
+        """Fallback to toy dataset for coherence evaluation"""
+        return self._evaluate_sample(self.toggle.encoded_dataset[0], model)['coherence']
+
+    @torch.no_grad()
+    def _evaluate_attention_toy(self, model):
+        """Fallback to toy dataset for attention evaluation"""
+        return self._evaluate_sample(self.toggle.encoded_dataset[0], model)['attention']
+
+    @torch.no_grad()
+    def _evaluate_context_toy(self, model):
+        """Fallback to toy dataset for context evaluation"""
+        return self._evaluate_sample(self.toggle.encoded_dataset[0], model)['context']
+
+    @torch.no_grad()
+    def _evaluate_factual_toy(self, model):
+        """Fallback to toy dataset for factual evaluation"""
+        return self._evaluate_sample(self.toggle.encoded_dataset[0], model)['factual']
 
 # Integration function to replace STL evaluation in toggle_dynamic_poc.py
-def optimize_stl_evaluation(toggle_framework):
+def optimize_stl_evaluation(toggle_framework, use_real_datasets=False, subset_size=50):
     """
     Replace the STL evaluation function in the toggle framework
     with the GPU-optimized version.
     
     Args:
         toggle_framework: DynamicPrecisionTransformer instance
+        use_real_datasets: Whether to use real datasets
+        subset_size: Number of examples from each dataset to use
         
     Returns:
         GPU-optimized STL evaluator
     """
     # Create GPU-optimized evaluator
-    gpu_evaluator = GPUOptimizedSTLEvaluator(toggle_framework)
+    gpu_evaluator = GPUOptimizedSTLEvaluator(
+        toggle_framework, 
+        use_real_datasets=use_real_datasets,
+        subset_size=subset_size
+    )
     
     # Replace the evaluate_stl_properties method
     toggle_framework.evaluate_stl_properties = gpu_evaluator.evaluate_stl_properties
