@@ -1,182 +1,182 @@
 {
   "layer_0": {
     "attn.c_attn": {
-      "bits": 16,
-      "pruning": 0.1
+      "bits": 2,
+      "pruning": 0.0
     },
     "attn.c_proj": {
-      "bits": 16,
-      "pruning": 0.1
+      "bits": 3,
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.1
+      "pruning": 0.0
     },
     "mlp.c_proj": {
       "bits": 16,
-      "pruning": 0.1
+      "pruning": 0.0
     }
   },
   "layer_1": {
     "attn.c_attn": {
-      "bits": 16,
-      "pruning": 0.5
+      "bits": 2,
+      "pruning": 0.0
     },
     "attn.c_proj": {
-      "bits": 3,
-      "pruning": 0.5
+      "bits": 16,
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
       "pruning": 0.0
     },
     "mlp.c_proj": {
-      "bits": 16,
-      "pruning": 0.3
+      "bits": 3,
+      "pruning": 0.0
     }
   },
   "layer_2": {
     "attn.c_attn": {
-      "bits": 16,
-      "pruning": 0.0
+      "bits": 2,
+      "pruning": 0.5
     },
     "attn.c_proj": {
-      "bits": 2,
-      "pruning": 0.0
+      "bits": 16,
+      "pruning": 0.5
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.0
+      "pruning": 0.5
     },
     "mlp.c_proj": {
       "bits": 16,
-      "pruning": 0.0
+      "pruning": 0.1
     }
   },
   "layer_3": {
     "attn.c_attn": {
-      "bits": 16,
-      "pruning": 0.5
+      "bits": 2,
+      "pruning": 0.0
     },
     "attn.c_proj": {
-      "bits": 2,
-      "pruning": 0.3
+      "bits": 16,
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_proj": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     }
   },
   "layer_4": {
     "attn.c_attn": {
       "bits": 3,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "attn.c_proj": {
-      "bits": 16,
-      "pruning": 0.5
+      "bits": 2,
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.4
+      "pruning": 0.0
     },
     "mlp.c_proj": {
-      "bits": 2,
+      "bits": 16,
       "pruning": 0.0
     }
   },
   "layer_5": {
     "attn.c_attn": {
       "bits": 2,
-      "pruning": 0.4
+      "pruning": 0.0
     },
     "attn.c_proj": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_proj": {
-      "bits": 3,
-      "pruning": 0.5
+      "bits": 16,
+      "pruning": 0.0
     }
   },
   "layer_6": {
     "attn.c_attn": {
-      "bits": 16,
-      "pruning": 0.5
+      "bits": 2,
+      "pruning": 0.0
     },
     "attn.c_proj": {
-      "bits": 2,
-      "pruning": 0.2
+      "bits": 16,
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_proj": {
       "bits": 16,
-      "pruning": 0.4
+      "pruning": 0.0
     }
   },
   "layer_7": {
     "attn.c_attn": {
-      "bits": 3,
-      "pruning": 0.5
+      "bits": 2,
+      "pruning": 0.0
     },
     "attn.c_proj": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_fc": {
-      "bits": 2,
-      "pruning": 0.1
+      "bits": 16,
+      "pruning": 0.0
     },
     "mlp.c_proj": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     }
   },
   "layer_8": {
     "attn.c_attn": {
-      "bits": 16,
-      "pruning": 0.5
-    },
-    "attn.c_proj": {
-      "bits": 3,
-      "pruning": 0.5
-    },
-    "mlp.c_fc": {
       "bits": 2,
       "pruning": 0.0
     },
+    "attn.c_proj": {
+      "bits": 16,
+      "pruning": 0.0
+    },
+    "mlp.c_fc": {
+      "bits": 16,
+      "pruning": 0.0
+    },
     "mlp.c_proj": {
-      "bits": 12,
-      "pruning": 0.5
+      "bits": 16,
+      "pruning": 0.0
     }
   },
   "layer_9": {
     "attn.c_attn": {
-      "bits": 3,
-      "pruning": 0.5
+      "bits": 2,
+      "pruning": 0.0
     },
     "attn.c_proj": {
-      "bits": 2,
-      "pruning": 0.1
+      "bits": 16,
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_proj": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     }
   },
   "layer_10": {
@@ -186,33 +186,33 @@
     },
     "attn.c_proj": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_proj": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     }
   },
   "layer_11": {
     "attn.c_attn": {
-      "bits": 16,
-      "pruning": 0.5
+      "bits": 3,
+      "pruning": 0.0
     },
     "attn.c_proj": {
-      "bits": 3,
-      "pruning": 0.5
+      "bits": 2,
+      "pruning": 0.0
     },
     "mlp.c_fc": {
       "bits": 16,
-      "pruning": 0.5
+      "pruning": 0.0
     },
     "mlp.c_proj": {
       "bits": 16,
-      "pruning": 0.4
+      "pruning": 0.0
     }
   }
 }
