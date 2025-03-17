@@ -1,3 +1,4 @@
+import gc
 import math
 
 import torch
@@ -485,12 +486,85 @@ class DynamicPrecisionTransformer:
             if name.startswith(param_prefix) and 'weight' in name:
                 # Step 1: Apply pruning if specified
                 if pruning_ratio > 0:
+                    # Memory-efficient approach for large tensors
+                    try:
+                        # For smaller tensors, use direct approach
+                        if param.numel() < 10000000:  # 10M elements threshold
+                            threshold = torch.quantile(torch.abs(param.data.flatten()), pruning_ratio)
+                        else:
+                            # For large tensors, use sampling
+                            print(f"Using sampling for large tensor: {name}")
+                            abs_values = torch.abs(param.data)
+                            
+                            # Calculate tensor size
+                            tensor_size = abs_values.numel()
+                            
+                            # Determine sample size (1% or up to 5M elements)
+                            sample_size = min(int(tensor_size * 0.01), 5000000)
+                            
+                            # Generate random indices for sampling
+                            indices = torch.randperm(tensor_size, device=abs_values.device)[:sample_size]
+                            
+                            # Sample the tensor
+                            sampled_values = abs_values.flatten()[indices]
+                            
+                            # Calculate quantile on the sample
+                            threshold = torch.quantile(sampled_values, pruning_ratio)
+                            
+                            # Optional: Free memory
+                            del sampled_values, abs_values, indices
+                            torch.cuda.empty_cache()
+                    except RuntimeError as e:
+                        print(f"Error in quantization, using approximate method: {str(e)}")
+                        # Fallback to an even more memory-efficient approximation
+                        # Using percentile approximation by sorting a small sample
+                        tensor_flat = torch.abs(param.data.flatten())
+                        sample_size = min(1000000, tensor_flat.numel())  # 1M max
+                        
+                        # Get sample indices
+                        sample_idx = torch.randint(0, tensor_flat.numel(), (sample_size,), device=tensor_flat.device)
+                        
+                        # Get samples
+                        samples = tensor_flat[sample_idx]
+                        
+                        # Sort and get threshold
+                        sorted_samples, _ = torch.sort(samples)
+                        threshold_idx = int(pruning_ratio * sample_size)
+                        threshold = sorted_samples[threshold_idx]
+                        
+                        # Free memory
+                        del tensor_flat, samples, sorted_samples, sample_idx
+                        torch.cuda.empty_cache()
+                    
                     # Create pruning mask based on magnitude
-                    mask = torch.ones_like(param.data)
-                    threshold = torch.quantile(torch.abs(param.data.flatten()), pruning_ratio)
-                    mask[torch.abs(param.data) < threshold] = 0
-                    # Apply mask
-                    param.data.mul_(mask)
+                    # We'll do this in chunks to save memory for large tensors
+                    if param.numel() > 10000000:  # For very large tensors
+                        # Process in chunks
+                        chunk_size = 1000000  # 1M elements per chunk
+                        total_chunks = (param.numel() + chunk_size - 1) // chunk_size
+                        
+                        # Create a new tensor for the pruned result
+                        pruned_data = param.data.clone()
+                        
+                        for chunk_idx in range(total_chunks):
+                            # Calculate chunk indices
+                            start_idx = chunk_idx * chunk_size
+                            end_idx = min((chunk_idx + 1) * chunk_size, param.numel())
+                            
+                            # Get chunk as view
+                            chunk_flat = pruned_data.flatten()[start_idx:end_idx]
+                            
+                            # Apply mask to chunk
+                            chunk_flat[torch.abs(chunk_flat) < threshold] = 0
+                        
+                        # No need to reshape since we modified in-place
+                    else:
+                        # For smaller tensors, we can do it all at once
+                        mask = torch.ones_like(param.data)
+                        mask[torch.abs(param.data) < threshold] = 0
+                        param.data.mul_(mask)
+                        del mask
+                        torch.cuda.empty_cache()
                 
                 # Step 2: Apply quantization based on bit-width
                 if bits < 16:
@@ -514,6 +588,10 @@ class DynamicPrecisionTransformer:
                         param.data = LsqBinaryTernaryExtension.apply(
                             param.data, alpha, bits, True
                         )
+                    
+                    # Free memory
+                    del alpha
+                    torch.cuda.empty_cache()
     
     # Update the evaluate_stl_properties method in DynamicPrecisionTransformer class
     def evaluate_stl_properties(self, model):
