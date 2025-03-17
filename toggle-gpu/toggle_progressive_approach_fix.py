@@ -252,7 +252,7 @@ class ProgressiveCompression:
         
         return [item[0] for item in sorted_items]
     
-    def run_progressive_compression(self, max_iterations=100, force_all_iterations=True):
+    def run_progressive_compression(self, max_iterations=100, force_all_iterations=True, save_every=100):
         """
         Run progressive compression to find optimal configurations
         
@@ -262,6 +262,7 @@ class ProgressiveCompression:
         Args:
             max_iterations: Maximum iterations to try
             force_all_iterations: Whether to continue exploring for all iterations even if stuck
+            save_every: Save intermediate results every N iterations
             
         Returns:
             best_config: Best configuration found
@@ -295,6 +296,15 @@ class ProgressiveCompression:
         best_config = copy.deepcopy(current_config)
         best_results = base_results
         
+        # Track all valid configurations for Pareto analysis
+        all_valid_configs = []
+        if base_results['stl_satisfied']:
+            all_valid_configs.append({
+                'config': copy.deepcopy(current_config),
+                'results': copy.deepcopy(base_results),
+                'iteration': 0
+            })
+        
         # Get layers sorted by sensitivity (least to most sensitive)
         sorted_layers = self._get_sorted_layers()
         print("\nLayers sorted by sensitivity (least to most sensitive):")
@@ -307,6 +317,8 @@ class ProgressiveCompression:
         # Progressive compression approach
         print("\nStarting progressive compression...")
         stuck_iterations = 0
+        random_exploration_threshold = max_iterations // 2  # Start random exploration halfway through
+        exploration_rate = 0.3  # 30% chance of random exploration once threshold is reached
         
         for iteration in range(max_iterations):
             print(f"\nIteration {iteration+1}/{max_iterations}")
@@ -314,35 +326,34 @@ class ProgressiveCompression:
             # Create a copy of the current best configuration
             test_config = copy.deepcopy(best_config)
             
-            # Try to compress one more layer
-            success = False
-            
-            # First, try to compress by bit-width
-            for layer_key in sorted_layers:
-                # Skip if this layer is already at minimum bit-width
-                min_bits_in_layer = min([test_config[layer_key][comp]['bits'] 
-                                        for comp in test_config[layer_key]])
+            # Decide whether to do random exploration
+            do_random_exploration = (iteration >= random_exploration_threshold and 
+                                random.random() < exploration_rate)
+                                
+            if do_random_exploration:
+                # Random exploration phase
+                print("Performing random exploration to find new configurations...")
                 
-                if min_bits_in_layer <= min(self.bit_options):
-                    continue
+                # Randomly select layer and component
+                layer_key = random.choice(sorted_layers)
+                component = random.choice(self.components)
                 
-                # Find the next lower bit-width
-                next_bits = max([b for b in self.bit_options if b < min_bits_in_layer])
+                # Randomly select bit-width and pruning level
+                current_bits = test_config[layer_key][component]['bits']
+                current_pruning = test_config[layer_key][component]['pruning']
                 
-                # Try reducing bit-width for this layer
-                for component in self.components:
-                    # Skip if already at minimum
-                    if test_config[layer_key][component]['bits'] <= next_bits:
-                        continue
+                # Available options (exclude current settings)
+                bit_options = [b for b in self.bit_options if b != current_bits]
+                if bit_options:
+                    new_bits = random.choice(bit_options)
+                    test_config[layer_key][component]['bits'] = new_bits
                     
-                    # Try reducing just this component
-                    old_bits = test_config[layer_key][component]['bits']
-                    test_config[layer_key][component]['bits'] = next_bits
+                    print(f"Random exploration: Changing {layer_key}.{component} bits from {current_bits} to {new_bits}")
                     
                     # Evaluate
                     results = self.evaluate_config(test_config)
                     
-                    # Check if still valid
+                    # Check if valid
                     if results['stl_satisfied']:
                         success = True
                         found_valid = True
@@ -351,47 +362,31 @@ class ProgressiveCompression:
                         if results['model_size'] < best_results['model_size']:
                             best_config = copy.deepcopy(test_config)
                             best_results = results
+                            print(f"Random exploration success! Found better configuration")
                         
-                        print(f"Success! Reduced {layer_key}.{component} from {old_bits}-bit to {next_bits}-bit")
-                        break
+                        # Save this valid configuration for Pareto analysis
+                        all_valid_configs.append({
+                            'config': copy.deepcopy(test_config),
+                            'results': copy.deepcopy(results),
+                            'iteration': iteration
+                        })
                     else:
-                        # Revert change if invalid
-                        test_config[layer_key][component]['bits'] = old_bits
+                        # Revert if invalid
+                        test_config[layer_key][component]['bits'] = current_bits
+                        print(f"Random exploration failed, reverting change")
                 
-                if success:
-                    break
-            
-            # If bit-width compression worked, continue to next iteration
-            if success:
-                self.results_history.append({
-                    'iteration': iteration,
-                    'stl_score': best_results['stl_score'],
-                    'model_size': best_results['model_size'],
-                    'avg_bits': best_results['avg_bits'],
-                    'avg_pruning': best_results['avg_pruning']
-                })
-                continue
-            
-            # If bit-width compression didn't work, try pruning
-            for layer_key in sorted_layers:
-                # Try to increase pruning
-                for component in self.components:
-                    current_pruning = test_config[layer_key][component]['pruning']
+                # Try random pruning change if bit change didn't work or wasn't attempted
+                pruning_options = [p for p in self.pruning_options if p != current_pruning]
+                if pruning_options:
+                    new_pruning = random.choice(pruning_options)
+                    test_config[layer_key][component]['pruning'] = new_pruning
                     
-                    # Find next pruning level
-                    next_pruning_options = [p for p in self.pruning_options if p > current_pruning]
-                    if not next_pruning_options:
-                        continue
-                    
-                    next_pruning = min(next_pruning_options)
-                    
-                    # Try increasing pruning for this component
-                    test_config[layer_key][component]['pruning'] = next_pruning
+                    print(f"Random exploration: Changing {layer_key}.{component} pruning from {current_pruning} to {new_pruning}")
                     
                     # Evaluate
                     results = self.evaluate_config(test_config)
                     
-                    # Check if still valid
+                    # Check if valid
                     if results['stl_satisfied']:
                         success = True
                         found_valid = True
@@ -400,15 +395,118 @@ class ProgressiveCompression:
                         if results['model_size'] < best_results['model_size']:
                             best_config = copy.deepcopy(test_config)
                             best_results = results
+                            print(f"Random exploration success! Found better configuration")
                         
-                        print(f"Success! Increased {layer_key}.{component} pruning from {current_pruning:.1f} to {next_pruning:.1f}")
-                        break
+                        # Save this valid configuration for Pareto analysis
+                        all_valid_configs.append({
+                            'config': copy.deepcopy(test_config),
+                            'results': copy.deepcopy(results),
+                            'iteration': iteration
+                        })
                     else:
-                        # Revert change if invalid
+                        # Revert if invalid
                         test_config[layer_key][component]['pruning'] = current_pruning
+                        print(f"Random exploration failed, reverting change")
+            else:
+                # Systematic exploration phase - try to compress one more layer
+                success = False
                 
-                if success:
-                    break
+                # First, try to compress by bit-width
+                for layer_key in sorted_layers:
+                    # Skip if this layer is already at minimum bit-width
+                    min_bits_in_layer = min([test_config[layer_key][comp]['bits'] 
+                                            for comp in test_config[layer_key]])
+                    
+                    if min_bits_in_layer <= min(self.bit_options):
+                        continue
+                    
+                    # Find the next lower bit-width
+                    next_bits = max([b for b in self.bit_options if b < min_bits_in_layer])
+                    
+                    # Try reducing bit-width for this layer
+                    for component in self.components:
+                        # Skip if already at minimum
+                        if test_config[layer_key][component]['bits'] <= next_bits:
+                            continue
+                        
+                        # Try reducing just this component
+                        old_bits = test_config[layer_key][component]['bits']
+                        test_config[layer_key][component]['bits'] = next_bits
+                        
+                        # Evaluate
+                        results = self.evaluate_config(test_config)
+                        
+                        # Check if still valid
+                        if results['stl_satisfied']:
+                            success = True
+                            found_valid = True
+                            
+                            # Save this valid configuration for Pareto analysis
+                            all_valid_configs.append({
+                                'config': copy.deepcopy(test_config),
+                                'results': copy.deepcopy(results),
+                                'iteration': iteration
+                            })
+                            
+                            # Update best config if this has better compression
+                            if results['model_size'] < best_results['model_size']:
+                                best_config = copy.deepcopy(test_config)
+                                best_results = results
+                            
+                            print(f"Success! Reduced {layer_key}.{component} from {old_bits}-bit to {next_bits}-bit")
+                            break
+                        else:
+                            # Revert change if invalid
+                            test_config[layer_key][component]['bits'] = old_bits
+                    
+                    if success:
+                        break
+                
+                # If bit-width compression didn't work, try pruning
+                if not success:
+                    for layer_key in sorted_layers:
+                        # Try to increase pruning
+                        for component in self.components:
+                            current_pruning = test_config[layer_key][component]['pruning']
+                            
+                            # Find next pruning level
+                            next_pruning_options = [p for p in self.pruning_options if p > current_pruning]
+                            if not next_pruning_options:
+                                continue
+                            
+                            next_pruning = min(next_pruning_options)
+                            
+                            # Try increasing pruning for this component
+                            test_config[layer_key][component]['pruning'] = next_pruning
+                            
+                            # Evaluate
+                            results = self.evaluate_config(test_config)
+                            
+                            # Check if still valid
+                            if results['stl_satisfied']:
+                                success = True
+                                found_valid = True
+                                
+                                # Save this valid configuration for Pareto analysis
+                                all_valid_configs.append({
+                                    'config': copy.deepcopy(test_config),
+                                    'results': copy.deepcopy(results),
+                                    'iteration': iteration
+                                })
+                                
+                                # Update best config if this has better compression
+                                if results['model_size'] < best_results['model_size']:
+                                    best_config = copy.deepcopy(test_config)
+                                    best_results = results
+                                
+                                print(f"Success! Increased {layer_key}.{component} pruning from {current_pruning:.1f} to {next_pruning:.1f}")
+                                break
+                            else:
+                                # Revert change if invalid
+                                test_config[layer_key][component]['pruning'] = current_pruning
+                        
+                        if success:
+                            break
             
             # Record results for this iteration
             self.results_history.append({
@@ -419,8 +517,12 @@ class ProgressiveCompression:
                 'avg_pruning': best_results['avg_pruning']
             })
             
+            # Save intermediate results periodically
+            if (iteration + 1) % save_every == 0 or iteration == max_iterations - 1:
+                self._save_intermediate_results(best_config, best_results, iteration + 1, all_valid_configs)
+            
             # If no valid compression options found
-            if not success:
+            if not success and not do_random_exploration:
                 stuck_iterations += 1
                 print(f"\nNo further valid compression options found in this iteration. (Stuck for {stuck_iterations} iterations)")
                 
@@ -464,6 +566,14 @@ class ProgressiveCompression:
                                     found_valid = True
                                     best_config = copy.deepcopy(test_config)
                                     best_results = results
+                                    
+                                    # Save this valid configuration for Pareto analysis
+                                    all_valid_configs.append({
+                                        'config': copy.deepcopy(test_config),
+                                        'results': copy.deepcopy(results),
+                                        'iteration': iteration
+                                    })
+                                    
                                     print(f"Success! Escaped local minimum with trade-off strategy")
                                     stuck_iterations = 0
                                 else:
@@ -478,17 +588,182 @@ class ProgressiveCompression:
         print("\nProgressive compression complete!")
         if found_valid:
             print(f"Best configuration: STL score={best_results['stl_score']:.4f}, "
-                  f"Model size={best_results['model_size']:.2f} MB, "
-                  f"Avg bits={best_results['avg_bits']:.2f}, "
-                  f"Avg pruning={best_results['avg_pruning']*100:.1f}%, "
-                  f"Satisfied={best_results['stl_satisfied']}")
+                f"Model size={best_results['model_size']:.2f} MB, "
+                f"Avg bits={best_results['avg_bits']:.2f}, "
+                f"Avg pruning={best_results['avg_pruning']*100:.1f}%, "
+                f"Satisfied={best_results['stl_satisfied']}")
         else:
             print("No valid configurations found that satisfy all STL constraints.")
             print("Consider relaxing constraints or using a different approach.")
         
         print(f"Total evaluations: {self.eval_count}")
+        print(f"Total valid configurations found: {len(all_valid_configs)}")
+        
+        # Save all valid configurations for Pareto analysis
+        self._save_pareto_data(all_valid_configs)
         
         return best_config, best_results
+
+    def _save_intermediate_results(self, best_config, best_results, iteration, all_valid_configs):
+        """Save intermediate results to file"""
+        try:
+            import os
+            import json
+            from datetime import datetime
+            
+            # Create results directory if it doesn't exist
+            results_dir = "intermediate_results"
+            if not os.path.exists(results_dir):
+                os.makedirs(results_dir)
+            
+            # Create timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Save best configuration
+            config_file = os.path.join(results_dir, f"best_config_iter_{iteration}_{timestamp}.json")
+            with open(config_file, 'w') as f:
+                json.dump(best_config, f, indent=2)
+            
+            # Save best results (converting torch tensors to Python types)
+            def clean_for_json(obj):
+                if isinstance(obj, dict):
+                    return {k: clean_for_json(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [clean_for_json(item) for item in obj]
+                elif isinstance(obj, (torch.Tensor, np.ndarray)):
+                    return obj.item() if obj.size == 1 else obj.tolist()
+                else:
+                    return obj
+            
+            results_file = os.path.join(results_dir, f"best_results_iter_{iteration}_{timestamp}.json")
+            with open(results_file, 'w') as f:
+                json.dump(clean_for_json(best_results), f, indent=2)
+            
+            # Save progress history
+            history_file = os.path.join(results_dir, f"progress_history_iter_{iteration}_{timestamp}.json")
+            with open(history_file, 'w') as f:
+                json.dump([clean_for_json(entry) for entry in self.results_history], f, indent=2)
+            
+            # Save summary of valid configurations
+            valid_configs_summary = []
+            for vc in all_valid_configs:
+                valid_configs_summary.append({
+                    'iteration': vc['iteration'],
+                    'stl_score': float(vc['results']['stl_score']),
+                    'model_size': float(vc['results']['model_size']),
+                    'avg_bits': float(vc['results']['avg_bits']),
+                    'avg_pruning': float(vc['results']['avg_pruning']),
+                    'is_best': (vc['config'] == best_config)
+                })
+            
+            valid_configs_file = os.path.join(results_dir, f"valid_configs_summary_iter_{iteration}_{timestamp}.json")
+            with open(valid_configs_file, 'w') as f:
+                json.dump(valid_configs_summary, f, indent=2)
+            
+            print(f"Saved intermediate results at iteration {iteration} to {results_dir}/")
+            
+        except Exception as e:
+            print(f"Error saving intermediate results: {str(e)}")
+
+    def _save_pareto_data(self, all_valid_configs):
+        """Save all valid configurations for Pareto analysis"""
+        try:
+            from datetime import datetime
+            import os
+            import json
+            import pandas as pd
+            
+            # Create pareto directory if it doesn't exist
+            pareto_dir = "pareto_data"
+            if not os.path.exists(pareto_dir):
+                os.makedirs(pareto_dir)
+            
+            # Create timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Create DataFrame for Pareto analysis
+            pareto_data = []
+            for idx, vc in enumerate(all_valid_configs):
+                config_data = {
+                    'config_id': idx,
+                    'iteration': vc['iteration'],
+                    'stl_score': float(vc['results']['stl_score']),
+                    'model_size': float(vc['results']['model_size']),
+                    'avg_bits': float(vc['results']['avg_bits']),
+                    'avg_pruning': float(vc['results']['avg_pruning']),
+                    'stl_satisfied': bool(vc['results']['stl_satisfied'])
+                }
+                
+                # Add robustness scores if available
+                if 'robustness' in vc['results']:
+                    for metric, value in vc['results']['robustness'].items():
+                        config_data[f'robustness_{metric}'] = float(value)
+                
+                pareto_data.append(config_data)
+            
+            # Save as CSV for easy analysis
+            df = pd.DataFrame(pareto_data)
+            csv_file = os.path.join(pareto_dir, f"pareto_candidates_{timestamp}.csv")
+            df.to_csv(csv_file, index=False)
+            
+            # Identify Pareto optimal points
+            is_pareto = np.ones(len(df), dtype=bool)
+            for i, (size_i, score_i) in enumerate(zip(df['model_size'], df['stl_score'])):
+                for j, (size_j, score_j) in enumerate(zip(df['model_size'], df['stl_score'])):
+                    if i != j:
+                        # Check if point j dominates point i
+                        if size_j <= size_i and score_j >= score_i and (size_j < size_i or score_j > score_i):
+                            is_pareto[i] = False
+                            break
+            
+            # Add pareto indicator to DataFrame
+            df['is_pareto'] = is_pareto
+            
+            # Save with Pareto indicators
+            pareto_csv = os.path.join(pareto_dir, f"pareto_front_{timestamp}.csv")
+            df.to_csv(pareto_csv, index=False)
+            
+            # Create Pareto front visualization
+            try:
+                import matplotlib.pyplot as plt
+                
+                # Extract pareto front for plotting
+                pareto_front = df[df['is_pareto'] == True]
+                
+                plt.figure(figsize=(10, 6))
+                
+                # Plot all configurations
+                plt.scatter(df['model_size'], df['stl_score'], alpha=0.5, label='Valid Configurations')
+                
+                # Highlight Pareto front
+                plt.scatter(pareto_front['model_size'], pareto_front['stl_score'], 
+                        color='red', s=100, label='Pareto Front')
+                
+                # Connect Pareto front points
+                pareto_front_sorted = pareto_front.sort_values('model_size')
+                plt.plot(pareto_front_sorted['model_size'], pareto_front_sorted['stl_score'], 
+                        'r--', alpha=0.7)
+                
+                plt.xlabel('Model Size (MB)')
+                plt.ylabel('STL Score')
+                plt.title('Pareto Front: STL Score vs Model Size')
+                plt.grid(alpha=0.3)
+                plt.legend()
+                
+                # Save plot
+                plot_file = os.path.join(pareto_dir, f"pareto_front_plot_{timestamp}.png")
+                plt.savefig(plot_file)
+                plt.close()
+                
+                print(f"Pareto analysis complete. Found {sum(is_pareto)} Pareto-optimal configurations.")
+                print(f"Results saved to {pareto_dir}/")
+                
+            except Exception as e:
+                print(f"Error creating Pareto visualization: {str(e)}")
+                # Still save the data even if visualization fails
+            
+        except Exception as e:
+            print(f"Error saving Pareto data: {str(e)}")
     
     def visualize_results(self, output_prefix="progressive_compression"):
         """Visualize the progression of results"""
