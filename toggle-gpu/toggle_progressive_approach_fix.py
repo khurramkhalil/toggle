@@ -666,17 +666,22 @@ class ProgressiveCompression:
             print(f"Error saving intermediate results: {str(e)}")
 
     def _save_pareto_data(self, all_valid_configs):
-        """Save all valid configurations for Pareto analysis"""
+        """Save all valid configurations for Pareto analysis in the results directory structure"""
         try:
             from datetime import datetime
             import os
             import json
             import pandas as pd
             
-            # Create pareto directory if it doesn't exist
-            pareto_dir = "pareto_data"
-            if not os.path.exists(pareto_dir):
-                os.makedirs(pareto_dir)
+            # Get proper paths for saving results
+            results_dir = "results"
+            pareto_dir = os.path.join(results_dir, "pareto_analysis")
+            plots_dir = os.path.join(results_dir, "plots")
+            
+            # Create directories if they don't exist
+            for directory in [results_dir, pareto_dir, plots_dir]:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
             
             # Create timestamp
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -684,15 +689,35 @@ class ProgressiveCompression:
             # Create DataFrame for Pareto analysis
             pareto_data = []
             for idx, vc in enumerate(all_valid_configs):
+                # Extract model name if available
+                model_name = "unknown"
+                if hasattr(self.toggle, 'model_name'):
+                    model_name = self.toggle.model_name.replace('/', '-').replace('\\', '-')
+                
                 config_data = {
                     'config_id': idx,
+                    'model_name': model_name,
                     'iteration': vc['iteration'],
                     'stl_score': float(vc['results']['stl_score']),
                     'model_size': float(vc['results']['model_size']),
                     'avg_bits': float(vc['results']['avg_bits']),
                     'avg_pruning': float(vc['results']['avg_pruning']),
-                    'stl_satisfied': bool(vc['results']['stl_satisfied'])
+                    'stl_satisfied': bool(vc['results']['stl_satisfied']),
+                    'timestamp': timestamp
                 }
+                
+                # Add threshold relaxation if available
+                if hasattr(self.toggle, 'stl_thresholds') and hasattr(self, 'original_thresholds'):
+                    # Approximate relaxation level based on coherence threshold difference
+                    orig = getattr(self, 'original_thresholds', {}).get('coherence', 0.1)
+                    relaxed = self.toggle.stl_thresholds.get('coherence', 0.1)
+                    if orig > 0:
+                        relaxation = (relaxed - orig) / orig
+                        config_data['threshold_relaxation'] = float(relaxation)
+                    else:
+                        config_data['threshold_relaxation'] = 0.0
+                else:
+                    config_data['threshold_relaxation'] = 0.0
                 
                 # Add robustness scores if available
                 if 'robustness' in vc['results']:
@@ -701,10 +726,29 @@ class ProgressiveCompression:
                 
                 pareto_data.append(config_data)
             
-            # Save as CSV for easy analysis
-            df = pd.DataFrame(pareto_data)
-            csv_file = os.path.join(pareto_dir, f"pareto_candidates_{timestamp}.csv")
-            df.to_csv(csv_file, index=False)
+            # Path to main Pareto data file (append to existing if it exists)
+            pareto_data_path = os.path.join(pareto_dir, 'pareto_data.csv')
+            
+            # Check if file exists and append to it
+            if os.path.exists(pareto_data_path):
+                # Read existing data
+                try:
+                    existing_df = pd.read_csv(pareto_data_path)
+                    # Append new data
+                    df = pd.concat([existing_df, pd.DataFrame(pareto_data)], ignore_index=True)
+                except:
+                    # Create new DataFrame if reading fails
+                    df = pd.DataFrame(pareto_data)
+            else:
+                # Create new DataFrame
+                df = pd.DataFrame(pareto_data)
+            
+            # Save updated data
+            df.to_csv(pareto_data_path, index=False)
+            
+            # Also save this session's data separately
+            session_csv = os.path.join(pareto_dir, f"pareto_candidates_{timestamp}.csv")
+            pd.DataFrame(pareto_data).to_csv(session_csv, index=False)
             
             # Identify Pareto optimal points
             is_pareto = np.ones(len(df), dtype=bool)
@@ -718,10 +762,6 @@ class ProgressiveCompression:
             
             # Add pareto indicator to DataFrame
             df['is_pareto'] = is_pareto
-            
-            # Save with Pareto indicators
-            pareto_csv = os.path.join(pareto_dir, f"pareto_front_{timestamp}.csv")
-            df.to_csv(pareto_csv, index=False)
             
             # Create Pareto front visualization
             try:
@@ -750,13 +790,23 @@ class ProgressiveCompression:
                 plt.grid(alpha=0.3)
                 plt.legend()
                 
-                # Save plot
-                plot_file = os.path.join(pareto_dir, f"pareto_front_plot_{timestamp}.png")
+                # Save plot to plots directory
+                model_name = "unknown"
+                if hasattr(self.toggle, 'model_name'):
+                    model_name = self.toggle.model_name.replace('/', '-').replace('\\', '-')
+                    
+                plot_file = os.path.join(plots_dir, f"pareto_front_{model_name}_{timestamp}.png")
                 plt.savefig(plot_file)
+                
+                # Also save to pareto_analysis directory for consistency
+                pareto_plot_file = os.path.join(pareto_dir, 'pareto_front_plot.png')
+                plt.savefig(pareto_plot_file)
+                
                 plt.close()
                 
                 print(f"Pareto analysis complete. Found {sum(is_pareto)} Pareto-optimal configurations.")
-                print(f"Results saved to {pareto_dir}/")
+                print(f"Pareto data saved to {pareto_data_path}")
+                print(f"Pareto plots saved to {plot_file} and {pareto_plot_file}")
                 
             except Exception as e:
                 print(f"Error creating Pareto visualization: {str(e)}")
@@ -764,6 +814,108 @@ class ProgressiveCompression:
             
         except Exception as e:
             print(f"Error saving Pareto data: {str(e)}")
+
+    def _save_intermediate_results(self, best_config, best_results, iteration, all_valid_configs):
+        """Save intermediate results to file while preserving output files"""
+        try:
+            import os
+            import json
+            from datetime import datetime
+            
+            # Get proper paths for saving results
+            results_dir = "results"
+            intermediate_dir = os.path.join(results_dir, "intermediate_results")
+            if not os.path.exists(intermediate_dir):
+                os.makedirs(intermediate_dir)
+            
+            # Create timestamp and model name for filenames
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            model_name = "unknown"
+            if hasattr(self.toggle, 'model_name'):
+                model_name = self.toggle.model_name.replace('/', '-').replace('\\', '-')
+            
+            # Save best configuration
+            config_file = os.path.join(intermediate_dir, f"{model_name}_config_iter_{iteration}_{timestamp}.json")
+            with open(config_file, 'w') as f:
+                json.dump(best_config, f, indent=2)
+            
+            # Save best results (converting torch tensors to Python types)
+            def clean_for_json(obj):
+                if isinstance(obj, dict):
+                    return {k: clean_for_json(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [clean_for_json(item) for item in obj]
+                elif isinstance(obj, (torch.Tensor, np.ndarray)):
+                    return obj.item() if obj.size == 1 else obj.tolist()
+                else:
+                    return obj
+            
+            results_file = os.path.join(intermediate_dir, f"{model_name}_results_iter_{iteration}_{timestamp}.json")
+            with open(results_file, 'w') as f:
+                json.dump(clean_for_json(best_results), f, indent=2)
+            
+            # Save progress history
+            history_file = os.path.join(intermediate_dir, f"{model_name}_history_iter_{iteration}_{timestamp}.json")
+            with open(history_file, 'w') as f:
+                json.dump([clean_for_json(entry) for entry in self.results_history], f, indent=2)
+            
+            # Save visualization of progress so far
+            try:
+                import matplotlib.pyplot as plt
+                
+                # Extract data
+                iterations = [r['iteration'] for r in self.results_history]
+                stl_scores = [r['stl_score'] for r in self.results_history]
+                model_sizes = [r['model_size'] for r in self.results_history]
+                
+                # Create plot
+                plt.figure(figsize=(10, 6))
+                plt.subplot(1, 2, 1)
+                plt.plot(iterations, stl_scores, 'b-', label='STL Score')
+                plt.axhline(y=0, color='r', linestyle='--', label='Satisfaction Threshold')
+                plt.xlabel('Iteration')
+                plt.ylabel('STL Score')
+                plt.title('STL Score Progression')
+                plt.grid(True, alpha=0.3)
+                plt.legend()
+                
+                plt.subplot(1, 2, 2)
+                plt.plot(iterations, model_sizes, 'g-', label='Model Size (MB)')
+                plt.xlabel('Iteration')
+                plt.ylabel('Model Size (MB)')
+                plt.title('Model Size Progression')
+                plt.grid(True, alpha=0.3)
+                
+                plt.tight_layout()
+                
+                # Save plot
+                plot_file = os.path.join(intermediate_dir, f"{model_name}_progress_iter_{iteration}_{timestamp}.png")
+                plt.savefig(plot_file)
+                plt.close()
+                
+            except Exception as e:
+                print(f"Error creating progress visualization: {str(e)}")
+            
+            # Save summary of valid configurations
+            valid_configs_summary = []
+            for vc in all_valid_configs:
+                valid_configs_summary.append({
+                    'iteration': vc['iteration'],
+                    'stl_score': float(vc['results']['stl_score']),
+                    'model_size': float(vc['results']['model_size']),
+                    'avg_bits': float(vc['results']['avg_bits']),
+                    'avg_pruning': float(vc['results']['avg_pruning']),
+                    'is_best': (vc['config'] == best_config)
+                })
+            
+            valid_configs_file = os.path.join(intermediate_dir, f"{model_name}_valid_configs_iter_{iteration}_{timestamp}.json")
+            with open(valid_configs_file, 'w') as f:
+                json.dump(valid_configs_summary, f, indent=2)
+            
+            print(f"Saved intermediate results at iteration {iteration} to {intermediate_dir}/")
+            
+        except Exception as e:
+            print(f"Error saving intermediate results: {str(e)}")
     
     def visualize_results(self, output_prefix="progressive_compression"):
         """Visualize the progression of results"""

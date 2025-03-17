@@ -1,6 +1,6 @@
 # TOGGLE Framework
 
-**TOGGLE** (Transformer Optimization with Guaranteed Logic Evaluation) is a dynamic precision framework for optimizing transformer-based language models through quantization and pruning while preserving model quality guarantees through Signal Temporal Logic (STL) evaluation.
+**TOGGLE** (Temporal Logic-Guided Large Language Model Compression) is a dynamic precision framework for optimizing transformer-based language models through quantization and pruning while preserving model quality guarantees through Signal Temporal Logic (STL) evaluation.
 
 ## Overview
 
@@ -131,7 +131,7 @@ If you use TOGGLE in your research, please cite:
 
 ```
 @article{toggle2025,
-  title={TOGGLE: Transformer Optimization with Guaranteed Logic Evaluation},
+  title={TOGGLE: Temporal Logic-Guided Large Language Model Compression},
   author={Khurram Khalil, Khaza Hoque},
   journal={arXiv preprint},
   year={2025}
