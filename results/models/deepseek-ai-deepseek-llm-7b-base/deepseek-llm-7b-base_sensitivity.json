@@ -1,0 +1,3066 @@
+{
+  "layer": {
+    "layer_0": {
+      "avg_sensitivity": 2.9370466601418075,
+      "rank": 27
+    },
+    "layer_1": {
+      "avg_sensitivity": 3.87330260460289,
+      "rank": 29
+    },
+    "layer_2": {
+      "avg_sensitivity": 0.6000924138587023,
+      "rank": 9
+    },
+    "layer_3": {
+      "avg_sensitivity": 0.4061884532880419,
+      "rank": 1
+    },
+    "layer_4": {
+      "avg_sensitivity": 0.5875854203655895,
+      "rank": 8
+    },
+    "layer_5": {
+      "avg_sensitivity": 0.49030915545412396,
+      "rank": 5
+    },
+    "layer_6": {
+      "avg_sensitivity": 0.7151971062522376,
+      "rank": 12
+    },
+    "layer_7": {
+      "avg_sensitivity": 0.40735355579084626,
+      "rank": 2
+    },
+    "layer_8": {
+      "avg_sensitivity": 0.3303383416994211,
+      "rank": 0
+    },
+    "layer_9": {
+      "avg_sensitivity": 0.4479174914179527,
+      "rank": 4
+    },
+    "layer_10": {
+      "avg_sensitivity": 0.5261641173705203,
+      "rank": 7
+    },
+    "layer_11": {
+      "avg_sensitivity": 0.605065113921867,
+      "rank": 10
+    },
+    "layer_12": {
+      "avg_sensitivity": 0.5055536233143911,
+      "rank": 6
+    },
+    "layer_13": {
+      "avg_sensitivity": 0.8467558236004135,
+      "rank": 15
+    },
+    "layer_14": {
+      "avg_sensitivity": 0.9100436840316964,
+      "rank": 17
+    },
+    "layer_15": {
+      "avg_sensitivity": 0.881320826662376,
+      "rank": 16
+    },
+    "layer_16": {
+      "avg_sensitivity": 0.447282490984056,
+      "rank": 3
+    },
+    "layer_17": {
+      "avg_sensitivity": 1.2633225933594587,
+      "rank": 21
+    },
+    "layer_18": {
+      "avg_sensitivity": 1.357888841926222,
+      "rank": 23
+    },
+    "layer_19": {
+      "avg_sensitivity": 1.0405001202779538,
+      "rank": 20
+    },
+    "layer_20": {
+      "avg_sensitivity": 0.7941025489615692,
+      "rank": 13
+    },
+    "layer_21": {
+      "avg_sensitivity": 1.480930257459415,
+      "rank": 24
+    },
+    "layer_22": {
+      "avg_sensitivity": 0.9468544575647907,
+      "rank": 18
+    },
+    "layer_23": {
+      "avg_sensitivity": 0.9476096776273457,
+      "rank": 19
+    },
+    "layer_24": {
+      "avg_sensitivity": 0.8365745163843379,
+      "rank": 14
+    },
+    "layer_25": {
+      "avg_sensitivity": 0.6755197235610653,
+      "rank": 11
+    },
+    "layer_26": {
+      "avg_sensitivity": 1.3204553025539172,
+      "rank": 22
+    },
+    "layer_27": {
+      "avg_sensitivity": 1.9332595508709343,
+      "rank": 26
+    },
+    "layer_28": {
+      "avg_sensitivity": 1.7869189338115947,
+      "rank": 25
+    },
+    "layer_29": {
+      "avg_sensitivity": 3.6346645299133447,
+      "rank": 28
+    }
+  },
+  "component": {
+    "layer_0.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.004418745171278715,
+        "sensitivity": 1.0267802727011732
+      },
+      "bits=8": {
+        "stl_score": -0.004418745171278715,
+        "sensitivity": 1.0267802727011732
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499969363212585,
+        "sensitivity": 1.8965113493109297e-06
+      }
+    },
+    "layer_0.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.08328361809253693,
+        "sensitivity": 1.5047491805038995
+      },
+      "bits=8": {
+        "stl_score": -0.08328361809253693,
+        "sensitivity": 1.5047491805038995
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499894857406616,
+        "sensitivity": 6.412014561956001e-06
+      }
+    },
+    "layer_0.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": -0.7474939823150635,
+        "sensitivity": 5.530266379468621
+      },
+      "bits=8": {
+        "stl_score": -0.7474939823150635,
+        "sensitivity": 5.530266379468621
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1647646427154541,
+        "sensitivity": 0.0014264474648745778
+      }
+    },
+    "layer_0.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": -0.764982283115387,
+        "sensitivity": 5.636256077077111
+      },
+      "bits=8": {
+        "stl_score": -0.764982283115387,
+        "sensitivity": 5.636256077077111
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649826020002365,
+        "sensitivity": 0.00010548215504738885
+      }
+    },
+    "layer_0.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.7491307258605957,
+        "sensitivity": 5.540186036926159
+      },
+      "bits=8": {
+        "stl_score": -0.7491307258605957,
+        "sensitivity": 5.540186036926159
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16492067277431488,
+        "sensitivity": 0.0004808107820824471
+      }
+    },
+    "layer_0.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.7645607590675354,
+        "sensitivity": 5.633701385979525
+      },
+      "bits=8": {
+        "stl_score": -0.7645607590675354,
+        "sensitivity": 5.633701385979525
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495047509670258,
+        "sensitivity": 0.0003001906535766443
+      }
+    },
+    "layer_0.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.7649646401405334,
+        "sensitivity": 5.636149149961036
+      },
+      "bits=8": {
+        "stl_score": -0.7649646401405334,
+        "sensitivity": 5.636149149961036
+      },
+      "pruning=0.3": {
+        "stl_score": 0.0561855286359787,
+        "sensitivity": 0.6594816581614154
+      }
+    },
+    "layer_1.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.7270461916923523,
+        "sensitivity": 5.406340380618991
+      },
+      "bits=8": {
+        "stl_score": -0.7270461916923523,
+        "sensitivity": 5.406340380618991
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499929130077362,
+        "sensitivity": 4.334883084139268e-06
+      }
+    },
+    "layer_1.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.4643399119377136,
+        "sensitivity": 3.814181172645479
+      },
+      "bits=8": {
+        "stl_score": -0.4643399119377136,
+        "sensitivity": 3.814181172645479
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499698162078857,
+        "sensitivity": 1.8332943043338986e-05
+      }
+    },
+    "layer_1.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": -0.7648798227310181,
+        "sensitivity": 5.635635105075308
+      },
+      "bits=8": {
+        "stl_score": -0.7648798227310181,
+        "sensitivity": 5.635635105075308
+      },
+      "pruning=0.3": {
+        "stl_score": -0.10949142277240753,
+        "sensitivity": 1.6635843540703603
+      }
+    },
+    "layer_1.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": -0.7637084722518921,
+        "sensitivity": 5.628536011544516
+      },
+      "bits=8": {
+        "stl_score": -0.7637084722518921,
+        "sensitivity": 5.628536011544516
+      },
+      "pruning=0.3": {
+        "stl_score": 0.08944432437419891,
+        "sensitivity": 0.4579132071515095
+      }
+    },
+    "layer_1.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.7649974226951599,
+        "sensitivity": 5.636347832102392
+      },
+      "bits=8": {
+        "stl_score": -0.7649974226951599,
+        "sensitivity": 5.636347832102392
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16493259370326996,
+        "sensitivity": 0.000408562730680126
+      }
+    },
+    "layer_1.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.7648565173149109,
+        "sensitivity": 5.635493860134817
+      },
+      "bits=8": {
+        "stl_score": -0.7648565173149109,
+        "sensitivity": 5.635493860134817
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1648956835269928,
+        "sensitivity": 0.0006322607598345628
+      }
+    },
+    "layer_1.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.7647290229797363,
+        "sensitivity": 5.634721167225069
+      },
+      "bits=8": {
+        "stl_score": -0.7647290229797363,
+        "sensitivity": 5.634721167225069
+      },
+      "pruning=0.3": {
+        "stl_score": -0.5666566491127014,
+        "sensitivity": 4.434282585429031
+      }
+    },
+    "layer_2.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.6180518269538879,
+        "sensitivity": 4.7457684993619145
+      },
+      "bits=8": {
+        "stl_score": -0.6180518269538879,
+        "sensitivity": 4.7457684993619145
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16483426094055176,
+        "sensitivity": 0.0010045188446850225
+      }
+    },
+    "layer_2.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.08274362981319427,
+        "sensitivity": 0.49852347560449717
+      },
+      "bits=8": {
+        "stl_score": 0.08274362981319427,
+        "sensitivity": 0.49852347560449717
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494186222553253,
+        "sensitivity": 0.0003523898707148213
+      }
+    },
+    "layer_2.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.10763297975063324,
+        "sensitivity": 0.347678936523133
+      },
+      "bits=8": {
+        "stl_score": 0.10763297975063324,
+        "sensitivity": 0.347678936523133
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16493995487689972,
+        "sensitivity": 0.0003639495589391927
+      }
+    },
+    "layer_2.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.16051964461803436,
+        "sensitivity": 0.027153707639048372
+      },
+      "bits=8": {
+        "stl_score": 0.16051964461803436,
+        "sensitivity": 0.027153707639048372
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498872637748718,
+        "sensitivity": 6.836471863944637e-05
+      }
+    },
+    "layer_2.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.1072024554014206,
+        "sensitivity": 0.3502881748995278
+      },
+      "bits=8": {
+        "stl_score": 0.1072024554014206,
+        "sensitivity": 0.3502881748995278
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649903953075409,
+        "sensitivity": 5.824999144312141e-05
+      }
+    },
+    "layer_2.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.15573342144489288,
+        "sensitivity": 0.0561611196569518
+      },
+      "bits=8": {
+        "stl_score": 0.15573342144489288,
+        "sensitivity": 0.0561611196569518
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649627983570099,
+        "sensitivity": 0.00022550423043949484
+      }
+    },
+    "layer_2.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": 0.11974309384822845,
+        "sensitivity": 0.274284308545057
+      },
+      "bits=8": {
+        "stl_score": 0.11974309384822845,
+        "sensitivity": 0.274284308545057
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497504711151123,
+        "sensitivity": 0.00015126935762360986
+      }
+    },
+    "layer_3.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.086469367146492,
+        "sensitivity": 1.5240567497606559
+      },
+      "bits=8": {
+        "stl_score": -0.086469367146492,
+        "sensitivity": 1.5240567497606559
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649785190820694,
+        "sensitivity": 0.00013022711265268385
+      }
+    },
+    "layer_3.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.05041705071926117,
+        "sensitivity": 0.6944421289947416
+      },
+      "bits=8": {
+        "stl_score": 0.05041705071926117,
+        "sensitivity": 0.6944421289947416
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649644523859024,
+        "sensitivity": 0.00021547981330742277
+      }
+    },
+    "layer_3.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.06770585477352142,
+        "sensitivity": 0.5896615025264692
+      },
+      "bits=8": {
+        "stl_score": 0.06770585477352142,
+        "sensitivity": 0.5896615025264692
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649262011051178,
+        "sensitivity": 0.0004473057482446207
+      }
+    },
+    "layer_3.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": -0.042335644364356995,
+        "sensitivity": 1.2565796526187254
+      },
+      "bits=8": {
+        "stl_score": -0.042335644364356995,
+        "sensitivity": 1.2565796526187254
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497769951820374,
+        "sensitivity": 0.00013519416618659342
+      }
+    },
+    "layer_3.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.14543889462947845,
+        "sensitivity": 0.11855218878632576
+      },
+      "bits=8": {
+        "stl_score": 0.14543889462947845,
+        "sensitivity": 0.11855218878632576
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496020555496216,
+        "sensitivity": 0.00024121818161949968
+      }
+    },
+    "layer_3.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.1608530580997467,
+        "sensitivity": 0.025133019951389706
+      },
+      "bits=8": {
+        "stl_score": 0.1608530580997467,
+        "sensitivity": 0.025133019951389706
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16487637162208557,
+        "sensitivity": 0.000749302603106323
+      }
+    },
+    "layer_3.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": 0.15585218369960785,
+        "sensitivity": 0.05544134844485618
+      },
+      "bits=8": {
+        "stl_score": 0.15585218369960785,
+        "sensitivity": 0.05544134844485618
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494958102703094,
+        "sensitivity": 0.0003056092574318184
+      }
+    },
+    "layer_4.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.7109299302101135,
+        "sensitivity": 5.308666072486651
+      },
+      "bits=8": {
+        "stl_score": -0.7109299302101135,
+        "sensitivity": 5.308666072486651
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649877429008484,
+        "sensitivity": 7.432518288013786e-05
+      }
+    },
+    "layer_4.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.16131605207920074,
+        "sensitivity": 0.022326995944987806
+      },
+      "bits=8": {
+        "stl_score": 0.16131605207920074,
+        "sensitivity": 0.022326995944987806
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649778038263321,
+        "sensitivity": 0.0001345619957368231
+      }
+    },
+    "layer_4.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.15936151146888733,
+        "sensitivity": 0.034172696142848125
+      },
+      "bits=8": {
+        "stl_score": 0.15936151146888733,
+        "sensitivity": 0.034172696142848125
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16490645706653595,
+        "sensitivity": 0.0005669665833797151
+      }
+    },
+    "layer_4.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.16311109066009521,
+        "sensitivity": 0.011447974674890542
+      },
+      "bits=8": {
+        "stl_score": 0.16311109066009521,
+        "sensitivity": 0.011447974674890542
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498005390167236,
+        "sensitivity": 0.00012092517603463499
+      }
+    },
+    "layer_4.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.09480248391628265,
+        "sensitivity": 0.4254395142474512
+      },
+      "bits=8": {
+        "stl_score": 0.09480248391628265,
+        "sensitivity": 0.4254395142474512
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649722009897232,
+        "sensitivity": 0.00016851857989591405
+      }
+    },
+    "layer_4.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.1603914350271225,
+        "sensitivity": 0.02793073543188034
+      },
+      "bits=8": {
+        "stl_score": 0.1603914350271225,
+        "sensitivity": 0.02793073543188034
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496166586875916,
+        "sensitivity": 0.00023236779532271533
+      }
+    },
+    "layer_4.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": 0.10908226668834686,
+        "sensitivity": 0.33889537967389577
+      },
+      "bits=8": {
+        "stl_score": 0.10908226668834686,
+        "sensitivity": 0.33889537967389577
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649608314037323,
+        "sensitivity": 0.00023742515892087783
+      }
+    },
+    "layer_5.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.08717019855976105,
+        "sensitivity": 1.5283042127025983
+      },
+      "bits=8": {
+        "stl_score": -0.08717019855976105,
+        "sensitivity": 1.5283042127025983
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495805978775024,
+        "sensitivity": 0.00025422283087191746
+      }
+    },
+    "layer_5.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.15831996500492096,
+        "sensitivity": 0.04048509870393317
+      },
+      "bits=8": {
+        "stl_score": 0.15831996500492096,
+        "sensitivity": 0.04048509870393317
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497915983200073,
+        "sensitivity": 0.00012634377988980907
+      }
+    },
+    "layer_5.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.16379176080226898,
+        "sensitivity": 0.007322701249882258
+      },
+      "bits=8": {
+        "stl_score": 0.16379176080226898,
+        "sensitivity": 0.007322701249882258
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16489024460315704,
+        "sensitivity": 0.0006652239332868718
+      }
+    },
+    "layer_5.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.1629733145236969,
+        "sensitivity": 0.012282981528972869
+      },
+      "bits=8": {
+        "stl_score": 0.1629733145236969,
+        "sensitivity": 0.012282981528972869
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499267518520355,
+        "sensitivity": 4.44325516124275e-05
+      }
+    },
+    "layer_5.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.16053524613380432,
+        "sensitivity": 0.027059153001775586
+      },
+      "bits=8": {
+        "stl_score": 0.16053524613380432,
+        "sensitivity": 0.027059153001775586
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16493256390094757,
+        "sensitivity": 0.0004087433508086318
+      }
+    },
+    "layer_5.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.01233531441539526,
+        "sensitivity": 1.0747594783347512
+      },
+      "bits=8": {
+        "stl_score": -0.01233531441539526,
+        "sensitivity": 1.0747594783347512
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497541964054108,
+        "sensitivity": 0.00014901160601728732
+      }
+    },
+    "layer_5.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.24034638702869415,
+        "sensitivity": 2.4566447119890134
+      },
+      "bits=8": {
+        "stl_score": -0.24034638702869415,
+        "sensitivity": 2.4566447119890134
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16481395065784454,
+        "sensitivity": 0.001127611462261727
+      }
+    },
+    "layer_6.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.1535281091928482,
+        "sensitivity": 1.9304733520738757
+      },
+      "bits=8": {
+        "stl_score": -0.1535281091928482,
+        "sensitivity": 1.9304733520738757
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649668961763382,
+        "sensitivity": 0.00020066896276994695
+      }
+    },
+    "layer_6.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.16205114126205444,
+        "sensitivity": 0.017871910165327926
+      },
+      "bits=8": {
+        "stl_score": 0.16205114126205444,
+        "sensitivity": 0.017871910165327926
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649860143661499,
+        "sensitivity": 8.480115033347443e-05
+      }
+    },
+    "layer_6.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.12382625043392181,
+        "sensitivity": 0.24953790597873396
+      },
+      "bits=8": {
+        "stl_score": 0.12382625043392181,
+        "sensitivity": 0.24953790597873396
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496700048446655,
+        "sensitivity": 0.00020003679232017662
+      }
+    },
+    "layer_6.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.09998707473278046,
+        "sensitivity": 0.3940177529718107
+      },
+      "bits=8": {
+        "stl_score": 0.09998707473278046,
+        "sensitivity": 0.3940177529718107
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649831384420395,
+        "sensitivity": 0.0001022309927342844
+      }
+    },
+    "layer_6.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.041123077273368835,
+        "sensitivity": 0.7507692385497902
+      },
+      "bits=8": {
+        "stl_score": 0.041123077273368835,
+        "sensitivity": 0.7507692385497902
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496062278747559,
+        "sensitivity": 0.00023868949982041844
+      }
+    },
+    "layer_6.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.1890297681093216,
+        "sensitivity": 2.1456349127148715
+      },
+      "bits=8": {
+        "stl_score": -0.1890297681093216,
+        "sensitivity": 2.1456349127148715
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498373448848724,
+        "sensitivity": 9.861859016416835e-05
+      }
+    },
+    "layer_6.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.16841216385364532,
+        "sensitivity": 2.020679740373015
+      },
+      "bits=8": {
+        "stl_score": -0.16841216385364532,
+        "sensitivity": 2.020679740373015
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495965421199799,
+        "sensitivity": 0.00024455965399685704
+      }
+    },
+    "layer_7.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.10776425898075104,
+        "sensitivity": 1.653116695142935
+      },
+      "bits=8": {
+        "stl_score": -0.10776425898075104,
+        "sensitivity": 1.653116695142935
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649879366159439,
+        "sensitivity": 7.315115204485014e-05
+      }
+    },
+    "layer_7.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.10187111794948578,
+        "sensitivity": 0.3825993096879309
+      },
+      "bits=8": {
+        "stl_score": 0.10187111794948578,
+        "sensitivity": 0.3825993096879309
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499127447605133,
+        "sensitivity": 5.292169765220023e-05
+      }
+    },
+    "layer_7.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.030553564429283142,
+        "sensitivity": 0.8148268896048871
+      },
+      "bits=8": {
+        "stl_score": 0.030553564429283142,
+        "sensitivity": 0.8148268896048871
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1648421734571457,
+        "sensitivity": 0.0009565642005667318
+      }
+    },
+    "layer_7.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.16204451024532318,
+        "sensitivity": 0.017912098143920467
+      },
+      "bits=8": {
+        "stl_score": 0.16204451024532318,
+        "sensitivity": 0.017912098143920467
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497322916984558,
+        "sensitivity": 0.00016228718546246385
+      }
+    },
+    "layer_7.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.16049765050411224,
+        "sensitivity": 0.027287005293885655
+      },
+      "bits=8": {
+        "stl_score": 0.16049765050411224,
+        "sensitivity": 0.027287005293885655
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498391330242157,
+        "sensitivity": 9.753486939313353e-05
+      }
+    },
+    "layer_7.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.11017678678035736,
+        "sensitivity": 0.33226192483439165
+      },
+      "bits=8": {
+        "stl_score": 0.11017678678035736,
+        "sensitivity": 0.33226192483439165
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649831235408783,
+        "sensitivity": 0.0001023213027985373
+      }
+    },
+    "layer_7.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.0079850098118186,
+        "sensitivity": 1.048393996936502
+      },
+      "bits=8": {
+        "stl_score": -0.0079850098118186,
+        "sensitivity": 1.048393996936502
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496963798999786,
+        "sensitivity": 0.0001840519109474131
+      }
+    },
+    "layer_8.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.1420537233352661,
+        "sensitivity": 0.13906837763297863
+      },
+      "bits=8": {
+        "stl_score": 0.1420537233352661,
+        "sensitivity": 0.13906837763297863
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498664021492004,
+        "sensitivity": 8.100812763485256e-05
+      }
+    },
+    "layer_8.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.16094739735126495,
+        "sensitivity": 0.024561266934604586
+      },
+      "bits=8": {
+        "stl_score": 0.16094739735126495,
+        "sensitivity": 0.024561266934604586
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499148309230804,
+        "sensitivity": 5.165735675265961e-05
+      }
+    },
+    "layer_8.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.09104405343532562,
+        "sensitivity": 0.44821787989357503
+      },
+      "bits=8": {
+        "stl_score": 0.09104405343532562,
+        "sensitivity": 0.44821787989357503
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16491010785102844,
+        "sensitivity": 0.0005448406176377542
+      }
+    },
+    "layer_8.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.15666209161281586,
+        "sensitivity": 0.05053281583258248
+      },
+      "bits=8": {
+        "stl_score": 0.15666209161281586,
+        "sensitivity": 0.05053281583258248
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649710237979889,
+        "sensitivity": 0.00017565307497189326
+      }
+    },
+    "layer_8.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.06435517966747284,
+        "sensitivity": 0.6099686235743766
+      },
+      "bits=8": {
+        "stl_score": 0.06435517966747284,
+        "sensitivity": 0.6099686235743766
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494259238243103,
+        "sensitivity": 0.00034796467756642916
+      }
+    },
+    "layer_8.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.0078073288314044476,
+        "sensitivity": 1.0473171425525398
+      },
+      "bits=8": {
+        "stl_score": -0.0078073288314044476,
+        "sensitivity": 1.0473171425525398
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496556997299194,
+        "sensitivity": 0.00020870655848845518
+      }
+    },
+    "layer_8.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.02443881332874298,
+        "sensitivity": 1.1481140142886777
+      },
+      "bits=8": {
+        "stl_score": -0.02443881332874298,
+        "sensitivity": 1.1481140142886777
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497771441936493,
+        "sensitivity": 0.00013510385612234052
+      }
+    },
+    "layer_9.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.15821778774261475,
+        "sensitivity": 0.04110435481451532
+      },
+      "bits=8": {
+        "stl_score": 0.15821778774261475,
+        "sensitivity": 0.04110435481451532
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649831384420395,
+        "sensitivity": 0.0001022309927342844
+      }
+    },
+    "layer_9.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.13082753121852875,
+        "sensitivity": 0.20710590290963674
+      },
+      "bits=8": {
+        "stl_score": 0.13082753121852875,
+        "sensitivity": 0.20710590290963674
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498422622680664,
+        "sensitivity": 9.56383580438226e-05
+      }
+    },
+    "layer_9.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.15274815261363983,
+        "sensitivity": 0.07425365730924957
+      },
+      "bits=8": {
+        "stl_score": 0.15274815261363983,
+        "sensitivity": 0.07425365730924957
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16492778062820435,
+        "sensitivity": 0.0004377328814338132
+      }
+    },
+    "layer_9.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.12957696616649628,
+        "sensitivity": 0.21468508474199724
+      },
+      "bits=8": {
+        "stl_score": 0.12957696616649628,
+        "sensitivity": 0.21468508474199724
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649852693080902,
+        "sensitivity": 8.93166535461195e-05
+      }
+    },
+    "layer_9.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.1528080850839615,
+        "sensitivity": 1.9261095697691757
+      },
+      "bits=8": {
+        "stl_score": -0.1528080850839615,
+        "sensitivity": 1.9261095697691757
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497965157032013,
+        "sensitivity": 0.00012336354776946334
+      }
+    },
+    "layer_9.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.07447455823421478,
+        "sensitivity": 0.5486390589402312
+      },
+      "bits=8": {
+        "stl_score": 0.07447455823421478,
+        "sensitivity": 0.5486390589402312
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16491390764713287,
+        "sensitivity": 0.0005218115512532643
+      }
+    },
+    "layer_9.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.11390168964862823,
+        "sensitivity": 1.690313243167163
+      },
+      "bits=8": {
+        "stl_score": -0.11390168964862823,
+        "sensitivity": 1.690313243167163
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16492155194282532,
+        "sensitivity": 0.0004754824882915259
+      }
+    },
+    "layer_10.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.026078596711158752,
+        "sensitivity": 1.158052094999324
+      },
+      "bits=8": {
+        "stl_score": -0.026078596711158752,
+        "sensitivity": 1.158052094999324
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496343910694122,
+        "sensitivity": 0.00022162089767662006
+      }
+    },
+    "layer_10.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.163923978805542,
+        "sensitivity": 0.006521380049766264
+      },
+      "bits=8": {
+        "stl_score": 0.163923978805542,
+        "sensitivity": 0.006521380049766264
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498906910419464,
+        "sensitivity": 6.628758716162964e-05
+      }
+    },
+    "layer_10.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.16364958882331848,
+        "sensitivity": 0.00818434957291919
+      },
+      "bits=8": {
+        "stl_score": 0.16364958882331848,
+        "sensitivity": 0.00818434957291919
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16492781043052673,
+        "sensitivity": 0.0004375522613053074
+      }
+    },
+    "layer_10.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.1637202501296997,
+        "sensitivity": 0.007756099248231932
+      },
+      "bits=8": {
+        "stl_score": 0.1637202501296997,
+        "sensitivity": 0.007756099248231932
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649879813194275,
+        "sensitivity": 7.288022185209145e-05
+      }
+    },
+    "layer_10.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.013943864963948727,
+        "sensitivity": 1.0845082691507233
+      },
+      "bits=8": {
+        "stl_score": -0.013943864963948727,
+        "sensitivity": 1.0845082691507233
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498257219791412,
+        "sensitivity": 0.00010566277517589466
+      }
+    },
+    "layer_10.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.086441770195961,
+        "sensitivity": 1.5238894955216593
+      },
+      "bits=8": {
+        "stl_score": -0.086441770195961,
+        "sensitivity": 1.5238894955216593
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16490714251995087,
+        "sensitivity": 0.0005628123204240816
+      }
+    },
+    "layer_10.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.1212691217660904,
+        "sensitivity": 1.7349643451350827
+      },
+      "bits=8": {
+        "stl_score": -0.1212691217660904,
+        "sensitivity": 1.7349643451350827
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496245563030243,
+        "sensitivity": 0.00022758136191731155
+      }
+    },
+    "layer_11.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.15262006223201752,
+        "sensitivity": 0.07502996262156751
+      },
+      "bits=8": {
+        "stl_score": 0.15262006223201752,
+        "sensitivity": 0.07502996262156751
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499215364456177,
+        "sensitivity": 4.7593403861279044e-05
+      }
+    },
+    "layer_11.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.15673385560512543,
+        "sensitivity": 0.05009788256314051
+      },
+      "bits=8": {
+        "stl_score": 0.15673385560512543,
+        "sensitivity": 0.05009788256314051
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499102115631104,
+        "sensitivity": 5.445696874449955e-05
+      }
+    },
+    "layer_11.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.08112727105617523,
+        "sensitivity": 0.5083195888941379
+      },
+      "bits=8": {
+        "stl_score": 0.08112727105617523,
+        "sensitivity": 0.5083195888941379
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16485989093780518,
+        "sensitivity": 0.000849185534170032
+      }
+    },
+    "layer_11.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.16304723918437958,
+        "sensitivity": 0.011834953300214224
+      },
+      "bits=8": {
+        "stl_score": 0.16304723918437958,
+        "sensitivity": 0.011834953300214224
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498583555221558,
+        "sensitivity": 8.588487110450924e-05
+      }
+    },
+    "layer_11.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.13552649319171906,
+        "sensitivity": 1.8213726533720016
+      },
+      "bits=8": {
+        "stl_score": -0.13552649319171906,
+        "sensitivity": 1.8213726533720016
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497428715229034,
+        "sensitivity": 0.00015587517090050784
+      }
+    },
+    "layer_11.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.2117874175310135,
+        "sensitivity": 2.2835600552444726
+      },
+      "bits=8": {
+        "stl_score": -0.2117874175310135,
+        "sensitivity": 2.2835600552444726
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495773196220398,
+        "sensitivity": 0.0002562096522854813
+      }
+    },
+    "layer_11.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.09934909641742706,
+        "sensitivity": 1.6021157119372655
+      },
+      "bits=8": {
+        "stl_score": -0.09934909641742706,
+        "sensitivity": 1.6021157119372655
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649576723575592,
+        "sensitivity": 0.0002565708925424929
+      }
+    },
+    "layer_12.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.10154984891414642,
+        "sensitivity": 0.38454639467322344
+      },
+      "bits=8": {
+        "stl_score": 0.10154984891414642,
+        "sensitivity": 0.38454639467322344
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497854888439178,
+        "sensitivity": 0.00013004649252417803
+      }
+    },
+    "layer_12.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.12235008180141449,
+        "sensitivity": 0.25848438218388337
+      },
+      "bits=8": {
+        "stl_score": 0.12235008180141449,
+        "sensitivity": 0.25848438218388337
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649746149778366,
+        "sensitivity": 0.000153888349486944
+      }
+    },
+    "layer_12.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.14946798980236053,
+        "sensitivity": 0.09413343113311225
+      },
+      "bits=8": {
+        "stl_score": 0.14946798980236053,
+        "sensitivity": 0.09413343113311225
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16476589441299438,
+        "sensitivity": 0.0014188614194773342
+      }
+    },
+    "layer_12.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.163692444562912,
+        "sensitivity": 0.007924617828127846
+      },
+      "bits=8": {
+        "stl_score": 0.163692444562912,
+        "sensitivity": 0.007924617828127846
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649835705757141,
+        "sensitivity": 9.961200087095027e-05
+      }
+    },
+    "layer_12.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.01340718474239111,
+        "sensitivity": 1.0812556618765907
+      },
+      "bits=8": {
+        "stl_score": -0.01340718474239111,
+        "sensitivity": 1.0812556618765907
+      },
+      "pruning=0.3": {
+        "stl_score": 0.164976567029953,
+        "sensitivity": 0.0001420577310698139
+      }
+    },
+    "layer_12.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.20695151388645172,
+        "sensitivity": 2.25425154947235
+      },
+      "bits=8": {
+        "stl_score": -0.20695151388645172,
+        "sensitivity": 2.25425154947235
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496919095516205,
+        "sensitivity": 0.00018676121287500012
+      }
+    },
+    "layer_12.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.03736235201358795,
+        "sensitivity": 1.2264384880541912
+      },
+      "bits=8": {
+        "stl_score": -0.03736235201358795,
+        "sensitivity": 1.2264384880541912
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16492974758148193,
+        "sensitivity": 0.0004258119529524302
+      }
+    },
+    "layer_13.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.14965330064296722,
+        "sensitivity": 0.09301033517406317
+      },
+      "bits=8": {
+        "stl_score": 0.14965330064296722,
+        "sensitivity": 0.09301033517406317
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649765968322754,
+        "sensitivity": 0.0001418771109413081
+      }
+    },
+    "layer_13.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.16061222553253174,
+        "sensitivity": 0.0265926112098451
+      },
+      "bits=8": {
+        "stl_score": 0.16061222553253174,
+        "sensitivity": 0.0265926112098451
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496528685092926,
+        "sensitivity": 0.0002104224497092603
+      }
+    },
+    "layer_13.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.05892269313335419,
+        "sensitivity": 0.6428927830789284
+      },
+      "bits=8": {
+        "stl_score": 0.05892269313335419,
+        "sensitivity": 0.6428927830789284
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649165004491806,
+        "sensitivity": 0.0005060976000732595
+      }
+    },
+    "layer_13.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.10979519784450531,
+        "sensitivity": 0.33457458495978
+      },
+      "bits=8": {
+        "stl_score": 0.10979519784450531,
+        "sensitivity": 0.33457458495978
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649768054485321,
+        "sensitivity": 0.0001406127700417675
+      }
+    },
+    "layer_13.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.15235961973667145,
+        "sensitivity": 1.9233915980754204
+      },
+      "bits=8": {
+        "stl_score": -0.15235961973667145,
+        "sensitivity": 1.9233915980754204
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495820879936218,
+        "sensitivity": 0.00025331973022938846
+      }
+    },
+    "layer_13.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.3027508854866028,
+        "sensitivity": 2.834853778523418
+      },
+      "bits=8": {
+        "stl_score": -0.3027508854866028,
+        "sensitivity": 2.834853778523418
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16493913531303406,
+        "sensitivity": 0.0003689166124731023
+      }
+    },
+    "layer_13.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.33571839332580566,
+        "sensitivity": 3.034656848397308
+      },
+      "bits=8": {
+        "stl_score": -0.33571839332580566,
+        "sensitivity": 3.034656848397308
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494952142238617,
+        "sensitivity": 0.00030597049768883
+      }
+    },
+    "layer_14.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.00805987324565649,
+        "sensitivity": 1.0488477146993085
+      },
+      "bits=8": {
+        "stl_score": -0.00805987324565649,
+        "sensitivity": 1.0488477146993085
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495674848556519,
+        "sensitivity": 0.0002621701165261728
+      }
+    },
+    "layer_14.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.13986043632030487,
+        "sensitivity": 0.15236102568029894
+      },
+      "bits=8": {
+        "stl_score": 0.13986043632030487,
+        "sensitivity": 0.15236102568029894
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497160494327545,
+        "sensitivity": 0.0001721309824660301
+      }
+    },
+    "layer_14.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.12077610194683075,
+        "sensitivity": 0.26802365365078884
+      },
+      "bits=8": {
+        "stl_score": 0.12077610194683075,
+        "sensitivity": 0.26802365365078884
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16473661363124847,
+        "sensitivity": 0.0015963206957342853
+      }
+    },
+    "layer_14.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.08005927503108978,
+        "sensitivity": 0.5147922918192719
+      },
+      "bits=8": {
+        "stl_score": 0.08005927503108978,
+        "sensitivity": 0.5147922918192719
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16488321125507355,
+        "sensitivity": 0.0007078502836142412
+      }
+    },
+    "layer_14.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.06458701193332672,
+        "sensitivity": 1.39143642040527
+      },
+      "bits=8": {
+        "stl_score": -0.06458701193332672,
+        "sensitivity": 1.39143642040527
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649518460035324,
+        "sensitivity": 0.0002918821276653774
+      }
+    },
+    "layer_14.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.27504515647888184,
+        "sensitivity": 2.666940276057998
+      },
+      "bits=8": {
+        "stl_score": -0.27504515647888184,
+        "sensitivity": 2.666940276057998
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494940221309662,
+        "sensitivity": 0.0003066929782028532
+      }
+    },
+    "layer_14.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.4143508970737457,
+        "sensitivity": 3.511217458235885
+      },
+      "bits=8": {
+        "stl_score": -0.4143508970737457,
+        "sensitivity": 3.511217458235885
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494347155094147,
+        "sensitivity": 0.00034263638377550796
+      }
+    },
+    "layer_15.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.16191188991069794,
+        "sensitivity": 0.01871585771577129
+      },
+      "bits=8": {
+        "stl_score": 0.16191188991069794,
+        "sensitivity": 0.01871585771577129
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499318182468414,
+        "sensitivity": 4.1362009427828846e-05
+      }
+    },
+    "layer_15.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.07807324826717377,
+        "sensitivity": 0.5268288171828985
+      },
+      "bits=8": {
+        "stl_score": 0.07807324826717377,
+        "sensitivity": 0.5268288171828985
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649758666753769,
+        "sensitivity": 0.0001463023040897003
+      }
+    },
+    "layer_15.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.12519900500774384,
+        "sensitivity": 0.24121818161949968
+      },
+      "bits=8": {
+        "stl_score": 0.12519900500774384,
+        "sensitivity": 0.24121818161949968
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16487596929073334,
+        "sensitivity": 0.0007517409748411514
+      }
+    },
+    "layer_15.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.1642429679632187,
+        "sensitivity": 0.004588112504304403
+      },
+      "bits=8": {
+        "stl_score": 0.1642429679632187,
+        "sensitivity": 0.004588112504304403
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498960554599762,
+        "sensitivity": 6.303642484852519e-05
+      }
+    },
+    "layer_15.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.21830762922763824,
+        "sensitivity": 2.323076488199229
+      },
+      "bits=8": {
+        "stl_score": -0.21830762922763824,
+        "sensitivity": 2.323076488199229
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497129201889038,
+        "sensitivity": 0.00017402749381534101
+      }
+    },
+    "layer_15.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.18083550035953522,
+        "sensitivity": 2.0959726859016867
+      },
+      "bits=8": {
+        "stl_score": -0.18083550035953522,
+        "sensitivity": 2.0959726859016867
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649731993675232,
+        "sensitivity": 0.00016246780559096965
+      }
+    },
+    "layer_15.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.5020451545715332,
+        "sensitivity": 4.042697785588193
+      },
+      "bits=8": {
+        "stl_score": -0.5020451545715332,
+        "sensitivity": 4.042697785588193
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496658325195312,
+        "sensitivity": 0.00020256547411925786
+      }
+    },
+    "layer_16.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.1586986631155014,
+        "sensitivity": 0.038189958731009936
+      },
+      "bits=8": {
+        "stl_score": 0.1586986631155014,
+        "sensitivity": 0.038189958731009936
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499049961566925,
+        "sensitivity": 5.76178209933511e-05
+      }
+    },
+    "layer_16.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.160058856010437,
+        "sensitivity": 0.029946365755940844
+      },
+      "bits=8": {
+        "stl_score": 0.160058856010437,
+        "sensitivity": 0.029946365755940844
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498146951198578,
+        "sensitivity": 0.00011234571993060936
+      }
+    },
+    "layer_16.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.11281870305538177,
+        "sensitivity": 0.31625031168260925
+      },
+      "bits=8": {
+        "stl_score": 0.11281870305538177,
+        "sensitivity": 0.31625031168260925
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16473668813705444,
+        "sensitivity": 0.0015958691454130208
+      }
+    },
+    "layer_16.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.14337490499019623,
+        "sensitivity": 0.13106121640612364
+      },
+      "bits=8": {
+        "stl_score": 0.14337490499019623,
+        "sensitivity": 0.13106121640612364
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649756282567978,
+        "sensitivity": 0.0001477472651177467
+      }
+    },
+    "layer_16.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.0067953323014080524,
+        "sensitivity": 0.9588161695067526
+      },
+      "bits=8": {
+        "stl_score": 0.0067953323014080524,
+        "sensitivity": 0.9588161695067526
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497363150119781,
+        "sensitivity": 0.0001598488137276355
+      }
+    },
+    "layer_16.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.029922112822532654,
+        "sensitivity": 0.8186538688876681
+      },
+      "bits=8": {
+        "stl_score": 0.029922112822532654,
+        "sensitivity": 0.8186538688876681
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649736613035202,
+        "sensitivity": 0.0001596681935991297
+      }
+    },
+    "layer_16.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.23137541115283966,
+        "sensitivity": 2.4022751633867103
+      },
+      "bits=8": {
+        "stl_score": -0.23137541115283966,
+        "sensitivity": 2.4022751633867103
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494834423065186,
+        "sensitivity": 0.0003131049927648092
+      }
+    },
+    "layer_17.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.4566229283809662,
+        "sensitivity": 3.7674115771903147
+      },
+      "bits=8": {
+        "stl_score": -0.4566229283809662,
+        "sensitivity": 3.7674115771903147
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498982906341553,
+        "sensitivity": 6.168177388473167e-05
+      }
+    },
+    "layer_17.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.1302671879529953,
+        "sensitivity": 0.21050192256580286
+      },
+      "bits=8": {
+        "stl_score": 0.1302671879529953,
+        "sensitivity": 0.21050192256580286
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649799942970276,
+        "sensitivity": 0.0001212864162916466
+      }
+    },
+    "layer_17.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.11692504584789276,
+        "sensitivity": 0.29136338665630873
+      },
+      "bits=8": {
+        "stl_score": 0.11692504584789276,
+        "sensitivity": 0.29136338665630873
+      },
+      "pruning=0.3": {
+        "stl_score": 0.13368909060955048,
+        "sensitivity": 0.18976311941076657
+      }
+    },
+    "layer_17.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.030566319823265076,
+        "sensitivity": 0.8147495841898866
+      },
+      "bits=8": {
+        "stl_score": 0.030566319823265076,
+        "sensitivity": 0.8147495841898866
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16490623354911804,
+        "sensitivity": 0.0005683212343435086
+      }
+    },
+    "layer_17.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.20730210840702057,
+        "sensitivity": 2.256376364664092
+      },
+      "bits=8": {
+        "stl_score": -0.20730210840702057,
+        "sensitivity": 2.256376364664092
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497614979743958,
+        "sensitivity": 0.00014458641286889517
+      }
+    },
+    "layer_17.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.21583135426044464,
+        "sensitivity": 2.3080687617216817
+      },
+      "bits=8": {
+        "stl_score": -0.21583135426044464,
+        "sensitivity": 2.3080687617216817
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497741639614105,
+        "sensitivity": 0.00013691005740739854
+      }
+    },
+    "layer_17.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.41593223810195923,
+        "sensitivity": 3.5208013428745315
+      },
+      "bits=8": {
+        "stl_score": -0.41593223810195923,
+        "sensitivity": 3.5208013428745315
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649286150932312,
+        "sensitivity": 0.00043267551783565065
+      }
+    },
+    "layer_18.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.4155988097190857,
+        "sensitivity": 3.5187805648768085
+      },
+      "bits=8": {
+        "stl_score": -0.4155988097190857,
+        "sensitivity": 3.5187805648768085
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497035324573517,
+        "sensitivity": 0.0001797170278632738
+      }
+    },
+    "layer_18.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.11665715277194977,
+        "sensitivity": 1.7070130190085526
+      },
+      "bits=8": {
+        "stl_score": -0.11665715277194977,
+        "sensitivity": 1.7070130190085526
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498027741909027,
+        "sensitivity": 0.00011957052507084147
+      }
+    },
+    "layer_18.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.16017697751522064,
+        "sensitivity": 0.029230477876608096
+      },
+      "bits=8": {
+        "stl_score": 0.16017697751522064,
+        "sensitivity": 0.029230477876608096
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16481025516986847,
+        "sensitivity": 0.0011500083581964466
+      }
+    },
+    "layer_18.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.09847919642925262,
+        "sensitivity": 0.4031564089936903
+      },
+      "bits=8": {
+        "stl_score": 0.09847919642925262,
+        "sensitivity": 0.4031564089936903
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498100757598877,
+        "sensitivity": 0.0001151453319224493
+      }
+    },
+    "layer_18.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.17189015448093414,
+        "sensitivity": 2.0417584706098992
+      },
+      "bits=8": {
+        "stl_score": -0.17189015448093414,
+        "sensitivity": 2.0417584706098992
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496215760707855,
+        "sensitivity": 0.0002293875632023696
+      }
+    },
+    "layer_18.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.3240186274051666,
+        "sensitivity": 2.9637491789686283
+      },
+      "bits=8": {
+        "stl_score": -0.3240186274051666,
+        "sensitivity": 2.9637491789686283
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494904458522797,
+        "sensitivity": 0.00030886041974492284
+      }
+    },
+    "layer_18.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.42780590057373047,
+        "sensitivity": 3.592762930753042
+      },
+      "bits=8": {
+        "stl_score": -0.42780590057373047,
+        "sensitivity": 3.592762930753042
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16489095985889435,
+        "sensitivity": 0.0006608890502027325
+      }
+    },
+    "layer_19.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.12138800323009491,
+        "sensitivity": 0.26431516117230774
+      },
+      "bits=8": {
+        "stl_score": 0.12138800323009491,
+        "sensitivity": 0.26431516117230774
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498535871505737,
+        "sensitivity": 8.877479316060209e-05
+      }
+    },
+    "layer_19.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.05908147990703583,
+        "sensitivity": 0.6419304390342495
+      },
+      "bits=8": {
+        "stl_score": 0.05908147990703583,
+        "sensitivity": 0.6419304390342495
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649424433708191,
+        "sensitivity": 0.00034886777820895815
+      }
+    },
+    "layer_19.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.15613506734371185,
+        "sensitivity": 0.0537269021850791
+      },
+      "bits=8": {
+        "stl_score": 0.15613506734371185,
+        "sensitivity": 0.0537269021850791
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1648430973291397,
+        "sensitivity": 0.0009509649765830518
+      }
+    },
+    "layer_19.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.10886316001415253,
+        "sensitivity": 0.3402232988586704
+      },
+      "bits=8": {
+        "stl_score": 0.10886316001415253,
+        "sensitivity": 0.3402232988586704
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498446464538574,
+        "sensitivity": 9.419339701577617e-05
+      }
+    },
+    "layer_19.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.4044528603553772,
+        "sensitivity": 3.451229359296152
+      },
+      "bits=8": {
+        "stl_score": -0.4044528603553772,
+        "sensitivity": 3.451229359296152
+      },
+      "pruning=0.3": {
+        "stl_score": 0.164968803524971,
+        "sensitivity": 0.00018910927454557556
+      }
+    },
+    "layer_19.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.2695000469684601,
+        "sensitivity": 2.633333553087823
+      },
+      "bits=8": {
+        "stl_score": -0.2695000469684601,
+        "sensitivity": 2.633333553087823
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496261954307556,
+        "sensitivity": 0.00022658795121052966
+      }
+    },
+    "layer_19.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.4189874231815338,
+        "sensitivity": 3.539317615348304
+      },
+      "bits=8": {
+        "stl_score": -0.4189874231815338,
+        "sensitivity": 3.539317615348304
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16492553055286407,
+        "sensitivity": 0.0004513697011360013
+      }
+    },
+    "layer_20.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": 0.0650424212217331,
+        "sensitivity": 0.6058035234110328
+      },
+      "bits=8": {
+        "stl_score": 0.0650424212217331,
+        "sensitivity": 0.6058035234110328
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16499093174934387,
+        "sensitivity": 5.499882913001696e-05
+      }
+    },
+    "layer_20.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": 0.1571616679430008,
+        "sensitivity": 0.04750508061843971
+      },
+      "bits=8": {
+        "stl_score": 0.1571616679430008,
+        "sensitivity": 0.04750508061843971
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498927772045135,
+        "sensitivity": 6.502324626208901e-05
+      }
+    },
+    "layer_20.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": -0.07268090546131134,
+        "sensitivity": 1.440490318625647
+      },
+      "bits=8": {
+        "stl_score": -0.07268090546131134,
+        "sensitivity": 1.440490318625647
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16485565900802612,
+        "sensitivity": 0.000874833592417856
+      }
+    },
+    "layer_20.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": -0.23093922436237335,
+        "sensitivity": 2.3996316071858996
+      },
+      "bits=8": {
+        "stl_score": -0.23093922436237335,
+        "sensitivity": 2.3996316071858996
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649772673845291,
+        "sensitivity": 0.00013781315804992756
+      }
+    },
+    "layer_20.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.07435433566570282,
+        "sensitivity": 0.5493676805386237
+      },
+      "bits=8": {
+        "stl_score": 0.07435433566570282,
+        "sensitivity": 0.5493676805386237
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649809628725052,
+        "sensitivity": 0.000115416262115208
+      }
+    },
+    "layer_20.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.04003952443599701,
+        "sensitivity": 0.7573362251820042
+      },
+      "bits=8": {
+        "stl_score": 0.04003952443599701,
+        "sensitivity": 0.7573362251820042
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495873034000397,
+        "sensitivity": 0.0002501588779805369
+      }
+    },
+    "layer_20.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.2535794973373413,
+        "sensitivity": 2.5368453773393806
+      },
+      "bits=8": {
+        "stl_score": -0.2535794973373413,
+        "sensitivity": 2.5368453773393806
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16488522291183472,
+        "sensitivity": 0.0006956584249400996
+      }
+    },
+    "layer_21.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.5086326003074646,
+        "sensitivity": 4.0826216975528595
+      },
+      "bits=8": {
+        "stl_score": -0.5086326003074646,
+        "sensitivity": 4.0826216975528595
+      },
+      "pruning=0.3": {
+        "stl_score": 0.164992555975914,
+        "sensitivity": 4.515503212645071e-05
+      }
+    },
+    "layer_21.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.5768805742263794,
+        "sensitivity": 4.496245765473975
+      },
+      "bits=8": {
+        "stl_score": -0.5768805742263794,
+        "sensitivity": 4.496245765473975
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498935222625732,
+        "sensitivity": 6.457169594082452e-05
+      }
+    },
+    "layer_21.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": -0.010838224552571774,
+        "sensitivity": 1.0656862067993906
+      },
+      "bits=8": {
+        "stl_score": -0.010838224552571774,
+        "sensitivity": 1.0656862067993906
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1491367667913437,
+        "sensitivity": 0.09614084324132574
+      }
+    },
+    "layer_21.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.042275890707969666,
+        "sensitivity": 0.7437824907389287
+      },
+      "bits=8": {
+        "stl_score": 0.042275890707969666,
+        "sensitivity": 0.7437824907389287
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498027741909027,
+        "sensitivity": 0.00011957052507084147
+      }
+    },
+    "layer_21.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.13036824762821198,
+        "sensitivity": 1.7901105602899603
+      },
+      "bits=8": {
+        "stl_score": -0.13036824762821198,
+        "sensitivity": 1.7901105602899603
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649806648492813,
+        "sensitivity": 0.00011722246340026603
+      }
+    },
+    "layer_21.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.05986596643924713,
+        "sensitivity": 1.3628240246084087
+      },
+      "bits=8": {
+        "stl_score": -0.05986596643924713,
+        "sensitivity": 1.3628240246084087
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649710088968277,
+        "sensitivity": 0.00017574338503614616
+      }
+    },
+    "layer_21.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.15839757025241852,
+        "sensitivity": 1.959985236110696
+      },
+      "bits=8": {
+        "stl_score": -0.15839757025241852,
+        "sensitivity": 1.959985236110696
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16494055092334747,
+        "sensitivity": 0.00036033715636907667
+      }
+    },
+    "layer_22.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.04893304407596588,
+        "sensitivity": 1.296563891706312
+      },
+      "bits=8": {
+        "stl_score": -0.04893304407596588,
+        "sensitivity": 1.296563891706312
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497960686683655,
+        "sensitivity": 0.00012363447796222204
+      }
+    },
+    "layer_22.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.3056933879852295,
+        "sensitivity": 2.85268712629131
+      },
+      "bits=8": {
+        "stl_score": -0.3056933879852295,
+        "sensitivity": 2.85268712629131
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649802029132843,
+        "sensitivity": 0.00012002207539210598
+      }
+    },
+    "layer_22.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.014409408904612064,
+        "sensitivity": 0.9126702525331296
+      },
+      "bits=8": {
+        "stl_score": 0.014409408904612064,
+        "sensitivity": 0.9126702525331296
+      },
+      "pruning=0.3": {
+        "stl_score": 0.12212179601192474,
+        "sensitivity": 0.25986793236823785
+      }
+    },
+    "layer_22.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": -0.16002722084522247,
+        "sensitivity": 1.9698619059776503
+      },
+      "bits=8": {
+        "stl_score": -0.16002722084522247,
+        "sensitivity": 1.9698619059776503
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649828404188156,
+        "sensitivity": 0.00010403719401934243
+      }
+    },
+    "layer_22.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.027506157755851746,
+        "sensitivity": 0.8332960202251195
+      },
+      "bits=8": {
+        "stl_score": 0.027506157755851746,
+        "sensitivity": 0.8332960202251195
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649697721004486,
+        "sensitivity": 0.00018323912036913697
+      }
+    },
+    "layer_22.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.15159465372562408,
+        "sensitivity": 1.9187554406169334
+      },
+      "bits=8": {
+        "stl_score": -0.15159465372562408,
+        "sensitivity": 1.9187554406169334
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649787575006485,
+        "sensitivity": 0.0001287821516246374
+      }
+    },
+    "layer_22.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": 0.16044239699840546,
+        "sensitivity": 0.027621875012135415
+      },
+      "bits=8": {
+        "stl_score": 0.16044239699840546,
+        "sensitivity": 0.027621875012135415
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649170219898224,
+        "sensitivity": 0.000502936747824408
+      }
+    },
+    "layer_23.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.4024829864501953,
+        "sensitivity": 3.439290730042176
+      },
+      "bits=8": {
+        "stl_score": -0.4024829864501953,
+        "sensitivity": 3.439290730042176
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498607397079468,
+        "sensitivity": 8.443991007646282e-05
+      }
+    },
+    "layer_23.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.015162243507802486,
+        "sensitivity": 1.0918923812442975
+      },
+      "bits=8": {
+        "stl_score": -0.015162243507802486,
+        "sensitivity": 1.0918923812442975
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495807468891144,
+        "sensitivity": 0.0002541325208076646
+      }
+    },
+    "layer_23.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.12021838873624802,
+        "sensitivity": 0.2714037335806143
+      },
+      "bits=8": {
+        "stl_score": 0.12021838873624802,
+        "sensitivity": 0.2714037335806143
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16470938920974731,
+        "sensitivity": 0.0017613171831243363
+      }
+    },
+    "layer_23.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.1621103584766388,
+        "sensitivity": 0.017513017969986895
+      },
+      "bits=8": {
+        "stl_score": 0.1621103584766388,
+        "sensitivity": 0.017513017969986895
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649460345506668,
+        "sensitivity": 0.00032710305272400894
+      }
+    },
+    "layer_23.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.09215040504932404,
+        "sensitivity": 1.558487281136946
+      },
+      "bits=8": {
+        "stl_score": -0.09215040504932404,
+        "sensitivity": 1.558487281136946
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16495724022388458,
+        "sensitivity": 0.00025918988440582706
+      }
+    },
+    "layer_23.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.3690147399902344,
+        "sensitivity": 3.2364528807691313
+      },
+      "bits=8": {
+        "stl_score": -0.3690147399902344,
+        "sensitivity": 3.2364528807691313
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16489073634147644,
+        "sensitivity": 0.0006622437011665261
+      }
+    },
+    "layer_23.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": 0.11010067164897919,
+        "sensitivity": 0.33272322864259546
+      },
+      "bits=8": {
+        "stl_score": 0.11010067164897919,
+        "sensitivity": 0.33272322864259546
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16484683752059937,
+        "sensitivity": 0.0009282971504555736
+      }
+    },
+    "layer_24.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.36841168999671936,
+        "sensitivity": 3.2327980324688164
+      },
+      "bits=8": {
+        "stl_score": -0.36841168999671936,
+        "sensitivity": 3.2327980324688164
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498537361621857,
+        "sensitivity": 8.868448309634919e-05
+      }
+    },
+    "layer_24.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.25953710079193115,
+        "sensitivity": 2.572952063508205
+      },
+      "bits=8": {
+        "stl_score": -0.25953710079193115,
+        "sensitivity": 2.572952063508205
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649591028690338,
+        "sensitivity": 0.0002479011263742144
+      }
+    },
+    "layer_24.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": -0.01822824776172638,
+        "sensitivity": 1.1104742244690964
+      },
+      "bits=8": {
+        "stl_score": -0.01822824776172638,
+        "sensitivity": 1.1104742244690964
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16478589177131653,
+        "sensitivity": 0.0012976653132499405
+      }
+    },
+    "layer_24.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.06072638928890228,
+        "sensitivity": 0.6319612916615002
+      },
+      "bits=8": {
+        "stl_score": 0.06072638928890228,
+        "sensitivity": 0.6319612916615002
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498756408691406,
+        "sensitivity": 7.540890365117268e-05
+      }
+    },
+    "layer_24.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.16198645532131195,
+        "sensitivity": 0.01826394615424977
+      },
+      "bits=8": {
+        "stl_score": 0.16198645532131195,
+        "sensitivity": 0.01826394615424977
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497239470481873,
+        "sensitivity": 0.00016734454906062633
+      }
+    },
+    "layer_24.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.09907148778438568,
+        "sensitivity": 0.399566764559766
+      },
+      "bits=8": {
+        "stl_score": 0.09907148778438568,
+        "sensitivity": 0.399566764559766
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498227417469025,
+        "sensitivity": 0.00010746897646095269
+      }
+    },
+    "layer_24.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": 0.030201420187950134,
+        "sensitivity": 0.8169610970433118
+      },
+      "bits=8": {
+        "stl_score": 0.030201420187950134,
+        "sensitivity": 0.8169610970433118
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16497929394245148,
+        "sensitivity": 0.00012553098931153298
+      }
+    },
+    "layer_25.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.4830012023448944,
+        "sensitivity": 3.927279897891829
+      },
+      "bits=8": {
+        "stl_score": -0.4830012023448944,
+        "sensitivity": 3.927279897891829
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496895253658295,
+        "sensitivity": 0.00018820617390304654
+      }
+    },
+    "layer_25.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.06795819103717804,
+        "sensitivity": 1.4118678081015894
+      },
+      "bits=8": {
+        "stl_score": -0.06795819103717804,
+        "sensitivity": 1.4118678081015894
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649378538131714,
+        "sensitivity": 0.0003766832779988518
+      }
+    },
+    "layer_25.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.10662232339382172,
+        "sensitivity": 0.35380412632102176
+      },
+      "bits=8": {
+        "stl_score": 0.10662232339382172,
+        "sensitivity": 0.35380412632102176
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16472601890563965,
+        "sensitivity": 0.0016605311514180984
+      }
+    },
+    "layer_25.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.09579996764659882,
+        "sensitivity": 0.419394158546362
+      },
+      "bits=8": {
+        "stl_score": 0.09579996764659882,
+        "sensitivity": 0.419394158546362
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498963534832,
+        "sensitivity": 6.285580472001939e-05
+      }
+    },
+    "layer_25.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": 0.12713073194026947,
+        "sensitivity": 0.22951074613001055
+      },
+      "bits=8": {
+        "stl_score": 0.12713073194026947,
+        "sensitivity": 0.22951074613001055
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1648806780576706,
+        "sensitivity": 0.0007232029945372345
+      }
+    },
+    "layer_25.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.16175681352615356,
+        "sensitivity": 0.019655714554451233
+      },
+      "bits=8": {
+        "stl_score": 0.16175681352615356,
+        "sensitivity": 0.019655714554451233
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496476531028748,
+        "sensitivity": 0.00021358330195811185
+      }
+    },
+    "layer_25.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": 0.04462270438671112,
+        "sensitivity": 0.7295593780996107
+      },
+      "bits=8": {
+        "stl_score": 0.04462270438671112,
+        "sensitivity": 0.7295593780996107
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16491000354290009,
+        "sensitivity": 0.0005454727880875246
+      }
+    },
+    "layer_26.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.24839134514331818,
+        "sensitivity": 2.5054020319583836
+      },
+      "bits=8": {
+        "stl_score": -0.24839134514331818,
+        "sensitivity": 2.5054020319583836
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498230397701263,
+        "sensitivity": 0.00010728835633244687
+      }
+    },
+    "layer_26.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.3112441301345825,
+        "sensitivity": 2.8863279864657727
+      },
+      "bits=8": {
+        "stl_score": -0.3112441301345825,
+        "sensitivity": 2.8863279864657727
+      },
+      "pruning=0.3": {
+        "stl_score": 0.14810620248317719,
+        "sensitivity": 0.1023866872850564
+      }
+    },
+    "layer_26.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": -0.42349040508270264,
+        "sensitivity": 3.566608413664888
+      },
+      "bits=8": {
+        "stl_score": -0.42349040508270264,
+        "sensitivity": 3.566608413664888
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1641954928636551,
+        "sensitivity": 0.004875840369014148
+      }
+    },
+    "layer_26.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": -0.4527931213378906,
+        "sensitivity": 3.74420062633642
+      },
+      "bits=8": {
+        "stl_score": -0.4527931213378906,
+        "sensitivity": 3.74420062633642
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16496096551418304,
+        "sensitivity": 0.0002366123683426017
+      }
+    },
+    "layer_26.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.012304677627980709,
+        "sensitivity": 1.074573800842647
+      },
+      "bits=8": {
+        "stl_score": -0.012304677627980709,
+        "sensitivity": 1.074573800842647
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649593859910965,
+        "sensitivity": 0.0002461852351534093
+      }
+    },
+    "layer_26.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": 0.16310976445674896,
+        "sensitivity": 0.01145601227060905
+      },
+      "bits=8": {
+        "stl_score": 0.16310976445674896,
+        "sensitivity": 0.01145601227060905
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16482487320899963,
+        "sensitivity": 0.0010614141851643503
+      }
+    },
+    "layer_26.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": 0.16143453121185303,
+        "sensitivity": 0.021608940624112987
+      },
+      "bits=8": {
+        "stl_score": 0.16143453121185303,
+        "sensitivity": 0.021608940624112987
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649518758058548,
+        "sensitivity": 0.0002917015075368716
+      }
+    },
+    "layer_27.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.029927268624305725,
+        "sensitivity": 1.1813773783945634
+      },
+      "bits=8": {
+        "stl_score": -0.029927268624305725,
+        "sensitivity": 1.1813773783945634
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16498278081417084,
+        "sensitivity": 0.00010439843427635404
+      }
+    },
+    "layer_27.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.2958934009075165,
+        "sensitivity": 2.793293267574361
+      },
+      "bits=8": {
+        "stl_score": -0.2958934009075165,
+        "sensitivity": 2.793293267574361
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649724543094635,
+        "sensitivity": 0.0001669833088036147
+      }
+    },
+    "layer_27.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": -0.3175361156463623,
+        "sensitivity": 2.9244612304764317
+      },
+      "bits=8": {
+        "stl_score": -0.3175361156463623,
+        "sensitivity": 2.9244612304764317
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16449293494224548,
+        "sensitivity": 0.003073161176461982
+      }
+    },
+    "layer_27.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": 0.05978481471538544,
+        "sensitivity": 0.6376678040015125
+      },
+      "bits=8": {
+        "stl_score": 0.05978481471538544,
+        "sensitivity": 0.6376678040015125
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1648411899805069,
+        "sensitivity": 0.0009625246648074233
+      }
+    },
+    "layer_27.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.6134305596351624,
+        "sensitivity": 4.7177608197552905
+      },
+      "bits=8": {
+        "stl_score": -0.6134305596351624,
+        "sensitivity": 4.7177608197552905
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16489847004413605,
+        "sensitivity": 0.0006153727778192702
+      }
+    },
+    "layer_27.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.6067054271697998,
+        "sensitivity": 4.677002442796928
+      },
+      "bits=8": {
+        "stl_score": -0.6067054271697998,
+        "sensitivity": 4.677002442796928
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16491885483264923,
+        "sensitivity": 0.0004918286099213011
+      }
+    },
+    "layer_27.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.17335887253284454,
+        "sensitivity": 2.050659791782922
+      },
+      "bits=8": {
+        "stl_score": -0.17335887253284454,
+        "sensitivity": 2.050659791782922
+      },
+      "pruning=0.3": {
+        "stl_score": -0.268717497587204,
+        "sensitivity": 2.6285908297535174
+      }
+    },
+    "layer_28.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.06918878853321075,
+        "sensitivity": 1.419325974447851
+      },
+      "bits=8": {
+        "stl_score": -0.06918878853321075,
+        "sensitivity": 1.419325974447851
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1649954617023468,
+        "sensitivity": 2.754456959713493e-05
+      }
+    },
+    "layer_28.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.3633256256580353,
+        "sensitivity": 3.201973401338016
+      },
+      "bits=8": {
+        "stl_score": -0.3633256256580353,
+        "sensitivity": 3.201973401338016
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16488118469715118,
+        "sensitivity": 0.0007201324523526359
+      }
+    },
+    "layer_28.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.022342607378959656,
+        "sensitivity": 0.8645902636900349
+      },
+      "bits=8": {
+        "stl_score": 0.022342607378959656,
+        "sensitivity": 0.8645902636900349
+      },
+      "pruning=0.3": {
+        "stl_score": -0.03689481317996979,
+        "sensitivity": 1.2236049194781922
+      }
+    },
+    "layer_28.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": -0.302600622177124,
+        "sensitivity": 2.8339430918354918
+      },
+      "bits=8": {
+        "stl_score": -0.302600622177124,
+        "sensitivity": 2.8339430918354918
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16449981927871704,
+        "sensitivity": 0.0030314379267771417
+      }
+    },
+    "layer_28.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.4614362120628357,
+        "sensitivity": 3.7965829922849017
+      },
+      "bits=8": {
+        "stl_score": -0.4614362120628357,
+        "sensitivity": 3.7965829922849017
+      },
+      "pruning=0.3": {
+        "stl_score": 0.1643456667661667,
+        "sensitivity": 0.003965695541473407
+      }
+    },
+    "layer_28.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.32359907031059265,
+        "sensitivity": 2.961206408799524
+      },
+      "bits=8": {
+        "stl_score": -0.32359907031059265,
+        "sensitivity": 2.961206408799524
+      },
+      "pruning=0.3": {
+        "stl_score": -0.2239743024110794,
+        "sensitivity": 2.3574199606735795
+      }
+    },
+    "layer_28.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.14687450230121613,
+        "sensitivity": 1.8901484634239272
+      },
+      "bits=8": {
+        "stl_score": -0.14687450230121613,
+        "sensitivity": 1.8901484634239272
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16483719646930695,
+        "sensitivity": 0.0009867277620272008
+      }
+    },
+    "layer_29.self_attn.q_proj": {
+      "bits=4": {
+        "stl_score": -0.762225329875946,
+        "sensitivity": 5.619547270229297
+      },
+      "bits=8": {
+        "stl_score": -0.762225329875946,
+        "sensitivity": 5.619547270229297
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16491296887397766,
+        "sensitivity": 0.0005275010853011972
+      }
+    },
+    "layer_29.self_attn.k_proj": {
+      "bits=4": {
+        "stl_score": -0.5710044503211975,
+        "sensitivity": 4.460632894736485
+      },
+      "bits=8": {
+        "stl_score": -0.5710044503211975,
+        "sensitivity": 4.460632894736485
+      },
+      "pruning=0.3": {
+        "stl_score": 0.16480503976345062,
+        "sensitivity": 0.0011816168806849622
+      }
+    },
+    "layer_29.self_attn.v_proj": {
+      "bits=4": {
+        "stl_score": 0.08013865351676941,
+        "sensitivity": 0.5143112101069967
+      },
+      "bits=8": {
+        "stl_score": 0.08013865351676941,
+        "sensitivity": 0.5143112101069967
+      },
+      "pruning=0.3": {
+        "stl_score": -0.2674960792064667,
+        "sensitivity": 2.621188294406836
+      }
+    },
+    "layer_29.self_attn.o_proj": {
+      "bits=4": {
+        "stl_score": -0.7649828791618347,
+        "sensitivity": 5.636259689479681
+      },
+      "bits=8": {
+        "stl_score": -0.7649828791618347,
+        "sensitivity": 5.636259689479681
+      },
+      "pruning=0.3": {
+        "stl_score": 0.14278970658779144,
+        "sensitivity": 0.13460787324946358
+      }
+    },
+    "layer_29.mlp.gate_proj": {
+      "bits=4": {
+        "stl_score": -0.764928936958313,
+        "sensitivity": 5.635932767047086
+      },
+      "bits=8": {
+        "stl_score": -0.764928936958313,
+        "sensitivity": 5.635932767047086
+      },
+      "pruning=0.3": {
+        "stl_score": -0.0982949286699295,
+        "sensitivity": 1.5957268167517582
+      }
+    },
+    "layer_29.mlp.up_proj": {
+      "bits=4": {
+        "stl_score": -0.7643242478370667,
+        "sensitivity": 5.632267984639703
+      },
+      "bits=8": {
+        "stl_score": -0.7643242478370667,
+        "sensitivity": 5.632267984639703
+      },
+      "pruning=0.3": {
+        "stl_score": 0.08938483893871307,
+        "sensitivity": 0.45827372492800705
+      }
+    },
+    "layer_29.mlp.down_proj": {
+      "bits=4": {
+        "stl_score": -0.7649914026260376,
+        "sensitivity": 5.636311346836434
+      },
+      "bits=8": {
+        "stl_score": -0.7649914026260376,
+        "sensitivity": 5.636311346836434
+      },
+      "pruning=0.3": {
+        "stl_score": -0.7005773186683655,
+        "sensitivity": 5.245922974726819
+      }
+    }
+  }
+}
