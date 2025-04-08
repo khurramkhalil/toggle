@@ -317,7 +317,7 @@ class DynamicPrecisionTransformer:
             ]
         
         # Bit-width options
-        self.bit_options = [2, 3, 4, 6, 8, 10, 12, 16]
+        self.bit_options = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         
         # # STL thresholds
         # self.stl_thresholds = {
@@ -370,7 +370,7 @@ class DynamicPrecisionTransformer:
                 # Randomly select bit width
                 bits = np.random.choice(self.bit_options)
                 # Randomly select pruning ratio (0-50%)
-                pruning = np.random.uniform(0, 0.5)
+                pruning = np.random.uniform(0, 0.9)
                 
                 layer_config[component] = {
                     'bits': bits,
