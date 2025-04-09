@@ -57,20 +57,43 @@ def main():
     for key, value in optimizer._config_summary(best_config).items():
         print(f"  {key}: {value}")
     
-    # Print property verification results for best model
-    print("\nProperty Verification Results:")
+    # Create a new model compressor with the best configuration
+    print("\nInitializing model compressor with best configuration...")
+    compressor = ModelCompressor(model, tokenizer, best_config)
+    
+    # Explicitly compress the model
+    print("Compressing model with best configuration...")
     try:
+        compressed_model = compressor.compress()
+        print("Compression successful!")
+        
+        # Print property verification results for best model
+        print("\nProperty Verification Results:")
         verification = compressor.verify(sample_inputs)
         for prop_name, result in verification.items():
             if prop_name != "summary":
                 satisfied = "✓" if result["satisfied"] else "✗"
-                robustness = result["min_robustness"]
+                robustness = result.get("min_robustness", 0)
                 print(f"  {prop_name}: {satisfied} (robustness={robustness:.4f})")
         
         print(f"\nOverall: {verification['summary']['satisfied_properties']}/{verification['summary']['total_properties']} properties satisfied")
-        print(f"Minimum robustness across all properties: {verification['summary']['min_robustness']:.4f}")
+        print(f"Minimum robustness across all properties: {verification['summary'].get('min_robustness', 0):.4f}")
+        
+        # Evaluate the compressed model
+        print("\n========== Best Model Evaluation ==========")
+        evaluation = compressor.evaluate(sample_inputs)
+        
+        # Print size reduction
+        size_reduction = evaluation["size_reduction"]
+        print("\nSize Reduction:")
+        print(f"Original size: {size_reduction['original_mb']:.2f} MB")
+        print(f"Compressed size: {size_reduction['compressed_mb']:.2f} MB")
+        print(f"Reduction: {size_reduction['reduction_percent']:.1f}%")
+        
     except Exception as e:
-        print(f"Error during verification: {str(e)}")
+        print(f"Error during compression or evaluation: {str(e)}")
+        import traceback
+        traceback.print_exc()
     
     # Print all tested configurations sorted by score
     print("\nAll Tested Configurations (sorted by score):")

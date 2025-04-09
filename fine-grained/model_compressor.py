@@ -168,22 +168,42 @@ class ModelCompressor:
         # Set random seeds for reproducibility
         self._set_seed(self.config.seed)
         
-    def compress(self):
-        """Apply compression techniques"""
-        # Create a deep copy of the model to avoid modifying the original
-        self.compressed_model = copy.deepcopy(self.original_model)
-        print(f"Model type: {type(self.compressed_model).__name__}")
-        
-        # Apply quantization if enabled
-        if self.config.quantization.enabled:
-            self._apply_quantization()
-        
-        # Apply pruning if enabled  
-        if self.config.pruning.enabled:
-            self._apply_pruning()
+    def compress(self) -> PreTrainedModel:
+            """
+            Apply compression techniques based on configuration
             
-        print("Compression complete, model ready for evaluation")
-        return self.compressed_model
+            Returns:
+                Compressed model
+            """
+            print("Starting model compression...")
+            
+            # Create a deep copy of the model to avoid modifying the original
+            try:
+                print("Creating a copy of the model...")
+                self.compressed_model = self._clone_model(self.original_model)
+                print(f"Model copied successfully. Type: {type(self.compressed_model).__name__}")
+            except Exception as e:
+                print(f"Error cloning model: {str(e)}")
+                raise
+            
+            # Apply quantization if enabled
+            if self.config.quantization.enabled:
+                try:
+                    self._apply_quantization()
+                except Exception as e:
+                    print(f"Error during quantization: {str(e)}")
+                    raise
+                
+            # Apply pruning if enabled
+            if self.config.pruning.enabled:
+                try:
+                    self._apply_pruning()
+                except Exception as e:
+                    print(f"Error during pruning: {str(e)}")
+                    raise
+                
+            print("Model compression completed successfully")
+            return self.compressed_model
         
     def verify(self, inputs: Union[List[str], Dict[str, torch.Tensor]]) -> Dict[str, Any]:
             """
@@ -326,8 +346,36 @@ class ModelCompressor:
             torch.backends.cudnn.benchmark = False
             
     def _clone_model(self, model: PreTrainedModel) -> PreTrainedModel:
-        """Create a deep copy of the model"""
-        return copy.deepcopy(model)
+            """Create a deep copy of the model"""
+            try:
+                # For HuggingFace models, use from_pretrained with config
+                from transformers import AutoConfig
+                
+                print("Cloning HuggingFace model...")
+                # Get the model's config
+                model_config = model.config
+                
+                # Create a new model with the same config
+                clone = type(model)(model_config)
+                
+                # Copy the state dictionary
+                state_dict = model.state_dict()
+                clone.load_state_dict(state_dict)
+                
+                # Set the model to the same device
+                device = next(model.parameters()).device
+                clone = clone.to(device)
+                
+                print(f"Model clone successful. Config type: {type(model_config).__name__}")
+                return clone
+                
+            except Exception as e:
+                print(f"Error in standard cloning: {str(e)}")
+                print("Trying alternative cloning method...")
+                
+                # Fallback to simple deep copy
+                import copy
+                return copy.deepcopy(model)
         
     def _apply_quantization(self):
         """Apply quantization based on configuration"""
