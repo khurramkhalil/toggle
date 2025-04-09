@@ -128,12 +128,51 @@ class BoTorchOptimizer:
         
         # Generate initial samples using Sobol sequence
         logger.info(f"Generating {self.initial_samples} initial points using Sobol sequence")
-        sobol = draw_sobol_samples(
-            bounds=torch.tensor(self.bounds, dtype=torch.float64),
-            n=self.initial_samples,
-            q=1,
-            seed=self.random_state
-        ).squeeze(1)
+        
+        # Create bounds tensor with proper shape for botorch
+        bounds_tensor = torch.tensor(self.bounds, dtype=torch.float64).T
+        
+        # Log the shape of bounds for debugging
+        logger.info(f"Bounds tensor shape: {bounds_tensor.shape}")
+        
+        # Make sure bounds are properly shaped
+        if bounds_tensor.shape[0] != 2 or bounds_tensor.shape[1] != 4:
+            logger.warning(f"Unexpected bounds shape: {bounds_tensor.shape}, reshaping to (2, 4)")
+            # Create proper bounds manually if needed
+            bounds_tensor = torch.tensor([
+                [2.0, 0.0, 0.0, 0.0],  # Lower bounds
+                [16.0, 2.0, 1.0, 1.0]  # Upper bounds
+            ], dtype=torch.float64)
+        
+        try:
+            sobol = draw_sobol_samples(
+                bounds=bounds_tensor,
+                n=self.initial_samples,
+                q=1,
+                seed=self.random_state
+            ).squeeze(1)
+            
+            logger.info(f"Generated Sobol points shape: {sobol.shape}")
+            
+            # Validate sobol points shape
+            if len(sobol.shape) != 2 or sobol.shape[1] != 4:
+                logger.warning(f"Unexpected sobol shape: {sobol.shape}, generating points manually")
+                # Generate random points manually
+                sobol = torch.zeros((self.initial_samples, 4), dtype=torch.float64)
+                for i in range(self.initial_samples):
+                    sobol[i, 0] = torch.rand(1).item() * (16 - 2) + 2  # bit_width
+                    sobol[i, 1] = torch.rand(1).item() * 2  # pruning_method
+                    sobol[i, 2] = torch.rand(1).item()  # pruning_amount
+                    sobol[i, 3] = torch.rand(1).item()  # layerwise
+        except Exception as e:
+            logger.error(f"Error generating Sobol points: {str(e)}")
+            # Generate random points as fallback
+            sobol = torch.zeros((self.initial_samples, 4), dtype=torch.float64)
+            for i in range(self.initial_samples):
+                sobol[i, 0] = torch.rand(1).item() * (16 - 2) + 2  # bit_width
+                sobol[i, 1] = torch.rand(1).item() * 2  # pruning_method
+                sobol[i, 2] = torch.rand(1).item()  # pruning_amount
+                sobol[i, 3] = torch.rand(1).item()  # layerwise
         
         # Convert Sobol points to parameter values
         initial_points = self._process_botorch_points(sobol)
