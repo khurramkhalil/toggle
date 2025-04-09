@@ -202,6 +202,13 @@ class BayesianCompressionOptimizer:
             # Create configuration from parameters
             config = self._create_config_from_params(params)
             
+            # Print detailed configuration
+            param_summary = self._config_summary(config)
+            print(f"\nTrying configuration: w_bits={param_summary['w_bits']}, "
+                f"pruning_method={param_summary['pruning_method']}, "
+                f"pruning_amount={param_summary['pruning_amount']}, "
+                f"weight_layerwise={param_summary['weight_layerwise']}")
+            
             # Create model compressor
             compressor = ModelCompressor(
                 self.model, 
@@ -215,6 +222,14 @@ class BayesianCompressionOptimizer:
                 
                 # Verify formal properties
                 verification_results = compressor.verify(self.sample_inputs)
+                
+                # Print robustness scores for each property
+                print("Property verification results:")
+                for prop_name, result in verification_results.items():
+                    if prop_name != "summary":
+                        satisfied = "✓" if result["satisfied"] else "✗"
+                        robustness = result["min_robustness"]
+                        print(f"  {prop_name}: {satisfied} (robustness={robustness:.4f})")
                 
                 # Calculate score
                 score = self._calculate_score(
@@ -237,9 +252,20 @@ class BayesianCompressionOptimizer:
                     self.best_config = config
                     self.best_model = compressed_model
                     
-                    if self.verbose:
-                        print(f"New best score: {score}")
-                        print(f"Configuration: {self._config_summary(config)}")
+                    print(f"\n>>> New best configuration found! Score: {score:.4f}")
+                    print(f">>> w_bits={param_summary['w_bits']}, "
+                        f"pruning_method={param_summary['pruning_method']}, "
+                        f"pruning_amount={param_summary['pruning_amount']}, "
+                        f"weight_layerwise={param_summary['weight_layerwise']}")
+                    
+                    # Print size reduction
+                    try:
+                        eval_results = compressor.evaluate(self.sample_inputs)
+                        size_info = eval_results["size_reduction"]
+                        print(f">>> Size reduction: {size_info['reduction_percent']:.2f}% "
+                            f"({size_info['original_mb']:.2f}MB → {size_info['compressed_mb']:.2f}MB)")
+                    except Exception as e:
+                        print(f">>> Error calculating size reduction: {str(e)}")
                 
                 # Return negative score (for minimization)
                 # Make sure we don't return -infinity which causes problems with GP

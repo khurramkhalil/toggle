@@ -57,6 +57,41 @@ def main():
     for key, value in optimizer._config_summary(best_config).items():
         print(f"  {key}: {value}")
     
+    # Print property verification results for best model
+    print("\nProperty Verification Results:")
+    try:
+        verification = compressor.verify(sample_inputs)
+        for prop_name, result in verification.items():
+            if prop_name != "summary":
+                satisfied = "✓" if result["satisfied"] else "✗"
+                robustness = result["min_robustness"]
+                print(f"  {prop_name}: {satisfied} (robustness={robustness:.4f})")
+        
+        print(f"\nOverall: {verification['summary']['satisfied_properties']}/{verification['summary']['total_properties']} properties satisfied")
+        print(f"Minimum robustness across all properties: {verification['summary']['min_robustness']:.4f}")
+    except Exception as e:
+        print(f"Error during verification: {str(e)}")
+    
+    # Print all tested configurations sorted by score
+    print("\nAll Tested Configurations (sorted by score):")
+    sorted_results = sorted(optimizer.results, key=lambda x: x['score'], reverse=True)
+    
+    print("\n{:<4} {:<8} {:<10} {:<14} {:<14} {:<10}".format(
+        "Rank", "Bits", "Pruning", "Amount", "Layerwise", "Score"))
+    print("-" * 70)
+    
+    for i, result in enumerate(sorted_results[:10]):  # Show top 10
+        config = result['config']
+        params = optimizer._config_summary(config)
+        print("{:<4} {:<8} {:<10} {:<14} {:<14} {:<10.4f}".format(
+            i+1,
+            params['w_bits'], 
+            params['pruning_method'], 
+            params['pruning_amount'],
+            params['weight_layerwise'],
+            result['score']
+        ))
+    
     # Evaluate best model
     print("\n========== Best Model Evaluation ==========")
     compressor = ModelCompressor(model, tokenizer, best_config)

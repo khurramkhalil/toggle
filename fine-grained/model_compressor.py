@@ -168,69 +168,69 @@ class ModelCompressor:
         # Set random seeds for reproducibility
         self._set_seed(self.config.seed)
         
-    def compress(self) -> PreTrainedModel:
-        """
-        Apply compression techniques based on configuration
-        
-        Returns:
-            Compressed model
-        """
+    def compress(self):
+        """Apply compression techniques"""
         # Create a deep copy of the model to avoid modifying the original
-        self.compressed_model = self._clone_model(self.original_model)
+        self.compressed_model = copy.deepcopy(self.original_model)
+        print(f"Model type: {type(self.compressed_model).__name__}")
         
         # Apply quantization if enabled
         if self.config.quantization.enabled:
             self._apply_quantization()
-            
-        # Apply pruning if enabled
+        
+        # Apply pruning if enabled  
         if self.config.pruning.enabled:
             self._apply_pruning()
             
+        print("Compression complete, model ready for evaluation")
         return self.compressed_model
         
     def verify(self, inputs: Union[List[str], Dict[str, torch.Tensor]]) -> Dict[str, Any]:
-        """
-        Verify that the compressed model maintains specified properties
-        
-        Args:
-            inputs: Text inputs or tokenized inputs for verification
+            """
+            Verify that the compressed model maintains specified properties
             
-        Returns:
-            Dictionary with verification results
-        """
-        if self.compressed_model is None:
-            raise ValueError("Model must be compressed before verification")
+            Args:
+                inputs: Text inputs or tokenized inputs for verification
+                
+            Returns:
+                Dictionary with verification results
+            """
+            if self.compressed_model is None:
+                raise ValueError("Model must be compressed before verification")
+                
+            # Initialize properties from config
+            properties = []
+            for prop_config in self.config.verification.properties:
+                # Create a copy of the property config to avoid modifying the original
+                prop_config_copy = prop_config.copy()
+                name = prop_config_copy.pop("name")
+                properties.append(get_property(name, **prop_config_copy))
+                
+            # Create property verifier
+            verifier = PropertyVerifier(properties)
             
-        # Initialize properties from config
-        properties = []
-        for prop_config in self.config.verification.properties:
-            # Create a copy of the property config to avoid modifying the original
-            prop_config_copy = prop_config.copy()
-            name = prop_config_copy.pop("name")
-            properties.append(get_property(name, **prop_config_copy))
+            # Run verification
+            results = verifier.verify_all(
+                self.original_model,
+                self.compressed_model,
+                self.tokenizer,
+                inputs,
+                device=self.config.device
+            )
             
-        # Create property verifier
-        verifier = PropertyVerifier(properties)
-        
-        # Run verification
-        results = verifier.verify_all(
-            self.original_model,
-            self.compressed_model,
-            self.tokenizer,
-            inputs,
-            device=self.config.device
-        )
-        
-        # Add summary statistics
-        satisfied_count = sum(1 for prop, res in results.items() if res["satisfied"])
-        results["summary"] = {
-            "total_properties": len(properties),
-            "satisfied_properties": satisfied_count,
-            "violated_properties": len(properties) - satisfied_count,
-            "verification_passed": (len(properties) - satisfied_count) <= self.config.verification.max_violations
-        }
-        
-        return results
+            # Add summary statistics
+            satisfied_count = sum(1 for prop, res in results.items() if res["satisfied"])
+            min_robustness = min([res["min_robustness"] for res in results.values()], default=0)
+            
+            results["summary"] = {
+                "total_properties": len(properties),
+                "satisfied_properties": satisfied_count,
+                "violated_properties": len(properties) - satisfied_count,
+                "verification_passed": (len(properties) - satisfied_count) <= self.config.verification.max_violations,
+                "min_robustness": min_robustness
+            }
+            
+            return results
         
     def evaluate(self, inputs: Union[List[str], Dict[str, torch.Tensor]]) -> Dict[str, Any]:
             """
