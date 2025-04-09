@@ -8,7 +8,7 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 try:
     import botorch
     from botorch.models import SingleTaskGP
-    from botorch.fit import fit_gpytorch_model
+    from botorch.fit import fit_gpytorch_mll
     from botorch.acquisition import ExpectedImprovement, UpperConfidenceBound
     from botorch.acquisition.analytic import ConstrainedExpectedImprovement
     from botorch.optim import optimize_acqf
@@ -169,12 +169,12 @@ class BoTorchOptimizer:
             # Fit GP model to objective
             gp = SingleTaskGP(X, Y)
             mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
-            fit_gpytorch_model(mll)
+            fit_gpytorch_mll(mll)
             
             # Fit GP model to constraint
             constraint_gp = SingleTaskGP(X, C)
             constraint_mll = ExactMarginalLogLikelihood(constraint_gp.likelihood, constraint_gp)
-            fit_gpytorch_model(constraint_mll)
+            fit_gpytorch_mll(constraint_mll)
             
             # LOG: Check if discrete params affect model quality
             self._log_discrete_parameter_effects(X, Y, C)
