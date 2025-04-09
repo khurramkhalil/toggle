@@ -20,29 +20,86 @@ from typing import Dict, Any, Optional
 from quantization.quant_layers import QuantizeLinear
 
 
-def calculate_size(model):
+def calculate_size(model: nn.Module, detailed: bool = False) -> Dict[str, Any]:
+    """
+    Calculate the memory size of a model, accounting for quantization and pruning
+    
+    Args:
+        model: PyTorch model
+        detailed: Whether to return detailed breakdown by layer
+        
+    Returns:
+        Dictionary with size information in MB
+    """
     total_bytes = 0
+    details = {}
+    
+    # Find all modules
     for name, module in model.named_modules():
-        if isinstance(module, QuantizeLinear):
-            # For quantized linear layers
-            if module.w_bits < 16:
+        # Skip containers/modules without parameters
+        if not any(True for _ in module.parameters(recurse=False)):
+            continue
+            
+        # Get parameters in this module
+        for param_name, param in module.named_parameters(recurse=False):
+            full_name = f"{name}.{param_name}" if name else param_name
+            
+            # Calculate parameter size in bytes
+            if isinstance(module, QuantizeLinear) and param_name == "weight":
                 # Quantized weights use fewer bits
-                total_bytes += module.weight.numel() * module.w_bits // 8
+                w_bits = module.w_bits
+                param_bytes = param.numel() * (w_bits // 8 if w_bits >= 8 else 1)
             else:
-                # Regular weights
-                total_bytes += module.weight.numel() * module.weight.element_size()
-                
-            # Add bias if present
-            if module.bias is not None:
-                total_bytes += module.bias.numel() * module.bias.element_size()
-        elif isinstance(module, torch.nn.Linear):
-            # Regular linear layers
-            total_bytes += module.weight.numel() * module.weight.element_size()
-            if module.bias is not None:
-                total_bytes += module.bias.numel() * module.bias.element_size()
-                
+                param_bytes = param.numel() * param.element_size()
+            
+            # Calculate sparsity (percentage of zeros)
+            non_zero = (param != 0).sum().item()
+            sparsity = 1.0 - (non_zero / param.numel())
+            
+            # Account for pruning
+            if sparsity > 0:
+                param_bytes = int(param_bytes * (1 - sparsity))
+            
+            # Add to total
+            total_bytes += param_bytes
+            
+            # Store details if requested
+            if detailed:
+                details[full_name] = {
+                    'size_bytes': param_bytes,
+                    'size_mb': param_bytes / (1024 ** 2),
+                    'shape': list(param.shape),
+                    'numel': param.numel(),
+                    'dtype': str(param.dtype),
+                    'sparsity': sparsity,
+                    'quantized': isinstance(module, QuantizeLinear) and param_name == "weight",
+                    'bits': module.w_bits if isinstance(module, QuantizeLinear) and param_name == "weight" else (param.element_size() * 8)
+                }
+    
     # Convert to MB
-    return total_bytes / (1024 ** 2)
+    total_mb = total_bytes / (1024 ** 2)
+    
+    result = {
+        'total_bytes': total_bytes,
+        'total_mb': total_mb
+    }
+    
+    if detailed:
+        result['details'] = details
+    
+    if detailed:
+        # Print summary by layer type
+        quantized_mb = sum(d['size_mb'] for d in details.values() if d['quantized'])
+        pruned_mb = sum(d['size_mb'] * d['sparsity'] for d in details.values())
+        full_precision_mb = sum(d['size_mb'] for d in details.values() if not d['quantized'])
+        
+        result['summary'] = {
+            'quantized_mb': quantized_mb,
+            'pruned_mb_savings': pruned_mb,
+            'full_precision_mb': full_precision_mb
+        }
+        
+    return result
 
 
 def calculate_size_reduction(original_model: nn.Module, compressed_model: nn.Module) -> Dict[str, Any]:
@@ -56,19 +113,30 @@ def calculate_size_reduction(original_model: nn.Module, compressed_model: nn.Mod
     Returns:
         Dictionary with size reduction information
     """
-    original_size = calculate_size(original_model)
-    compressed_size = calculate_size(compressed_model)
-    
-    reduction_bytes = original_size - compressed_size
-    reduction_ratio = reduction_bytes / original_size
-    
-    return {
-        'original_mb': original_size,
-        'compressed_mb': compressed_size,
-        'reduction_mb': reduction_bytes / (1024 ** 2),
-        'reduction_ratio': reduction_ratio,
-        'reduction_percent': reduction_ratio * 100
-    }
+    try:
+        original_size = calculate_size(original_model)
+        compressed_size = calculate_size(compressed_model)
+        
+        reduction_bytes = original_size['total_bytes'] - compressed_size['total_bytes']
+        reduction_ratio = reduction_bytes / original_size['total_bytes'] if original_size['total_bytes'] > 0 else 0.0
+        
+        return {
+            'original_mb': original_size['total_mb'],
+            'compressed_mb': compressed_size['total_mb'],
+            'reduction_mb': reduction_bytes / (1024 ** 2),
+            'reduction_ratio': reduction_ratio,
+            'reduction_percent': reduction_ratio * 100
+        }
+    except Exception as e:
+        print(f"Error in calculate_size_reduction: {str(e)}")
+        # Return default values
+        return {
+            'original_mb': 0.0,
+            'compressed_mb': 0.0,
+            'reduction_mb': 0.0,
+            'reduction_ratio': 0.0,
+            'reduction_percent': 0.0
+        }
 
 class ModelCompressor:
     """
@@ -165,54 +233,87 @@ class ModelCompressor:
         return results
         
     def evaluate(self, inputs: Union[List[str], Dict[str, torch.Tensor]]) -> Dict[str, Any]:
-        """
-        Evaluate compression results including size reduction and verification
-        
-        Args:
-            inputs: Text inputs or tokenized inputs for evaluation
+            """
+            Evaluate compression results including size reduction and verification
             
-        Returns:
-            Dictionary with evaluation results
-        """
-        if self.compressed_model is None:
-            raise ValueError("Model must be compressed before evaluation")
+            Args:
+                inputs: Text inputs or tokenized inputs for evaluation
+                
+            Returns:
+                Dictionary with evaluation results
+            """
+            if self.compressed_model is None:
+                raise ValueError("Model must be compressed before evaluation")
+                
+            # Calculate size reduction
+            try:
+                size_reduction = calculate_size_reduction(
+                    self.original_model,
+                    self.compressed_model
+                )
+            except Exception as e:
+                print(f"Error calculating size reduction: {str(e)}")
+                # Provide a default size reduction if calculation fails
+                size_reduction = {
+                    "original_mb": 0.0,
+                    "compressed_mb": 0.0,
+                    "reduction_ratio": 0.0,
+                    "reduction_percent": 0.0
+                }
             
-        # Calculate size reduction
-        size_reduction = calculate_size_reduction(
-            self.original_model,
-            self.compressed_model
-        )
-        
-        # Run verification
-        verification_results = self.verify(inputs)
-        
-        # Measure sparsity
-        sparsity = get_model_sparsity(self.compressed_model)
-        avg_sparsity = sum(sparsity.values()) / len(sparsity) if sparsity else 0
-        
-        # Generate sample outputs
-        if isinstance(inputs, list) and isinstance(inputs[0], str):
-            sample_text = inputs[0]
-        else:
-            sample_text = "The model generates this text as a sample for comparison."
+            # Run verification
+            try:
+                verification_results = self.verify(inputs)
+            except Exception as e:
+                print(f"Error during verification: {str(e)}")
+                # Provide default verification results if verification fails
+                verification_results = {
+                    "summary": {
+                        "total_properties": 0,
+                        "satisfied_properties": 0,
+                        "violated_properties": 0,
+                        "verification_passed": False
+                    }
+                }
             
-        # Generate from both models
-        original_output = self._generate_text(self.original_model, sample_text)
-        compressed_output = self._generate_text(self.compressed_model, sample_text)
-        
-        return {
-            "size_reduction": size_reduction,
-            "verification": verification_results,
-            "sparsity": {
-                "average": avg_sparsity,
-                "by_layer": sparsity
-            },
-            "sample_generation": {
-                "input": sample_text,
-                "original_output": original_output,
-                "compressed_output": compressed_output
+            # Measure sparsity
+            try:
+                sparsity = get_model_sparsity(self.compressed_model)
+                avg_sparsity = sum(sparsity.values()) / len(sparsity) if sparsity else 0
+            except Exception as e:
+                print(f"Error calculating sparsity: {str(e)}")
+                sparsity = {}
+                avg_sparsity = 0.0
+            
+            # Generate sample outputs
+            try:
+                if isinstance(inputs, list) and isinstance(inputs[0], str):
+                    sample_text = inputs[0]
+                else:
+                    sample_text = "The model generates this text as a sample for comparison."
+                    
+                # Generate from both models
+                original_output = self._generate_text(self.original_model, sample_text)
+                compressed_output = self._generate_text(self.compressed_model, sample_text)
+            except Exception as e:
+                print(f"Error generating sample text: {str(e)}")
+                sample_text = "Sample generation failed"
+                original_output = ""
+                compressed_output = ""
+            
+            return {
+                "size_reduction": size_reduction,
+                "verification": verification_results,
+                "sparsity": {
+                    "average": avg_sparsity,
+                    "by_layer": sparsity
+                },
+                "sample_generation": {
+                    "input": sample_text,
+                    "original_output": original_output,
+                    "compressed_output": compressed_output
+                }
             }
-        }
         
     def _set_seed(self, seed: int):
         """Set random seeds for reproducibility"""

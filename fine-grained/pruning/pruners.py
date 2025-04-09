@@ -24,7 +24,6 @@ class L1Pruning(PruningMethod):
     def apply(self, module: nn.Module, name: str, amount: float):
         prune.l1_unstructured(module, name, amount=amount)
 
-
 class L2Pruning(PruningMethod):
     """L2 unstructured pruning (element-wise)"""
     
@@ -32,7 +31,23 @@ class L2Pruning(PruningMethod):
         super().__init__("l2_unstructured")
     
     def apply(self, module: nn.Module, name: str, amount: float):
-        prune.l2_unstructured(module, name, amount=amount)
+        # Since torch doesn't have l2_unstructured directly, we implement it
+        if name not in module._parameters:
+            raise ValueError(f"Parameter '{name}' does not exist in module")
+            
+        param = module._parameters[name]
+        if param is None:
+            return
+            
+        # Calculate L2 norm (squared) of each element
+        l2_norm = param.pow(2)
+        
+        # Create a mask based on the L2 norms
+        threshold = torch.quantile(l2_norm.flatten(), amount)
+        mask = l2_norm > threshold
+        
+        # Apply the mask using PyTorch's custom pruning
+        prune.CustomFromMask.apply(module, name, mask)
 
 
 class RandomPruning(PruningMethod):
