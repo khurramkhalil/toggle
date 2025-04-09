@@ -43,11 +43,32 @@ class L2Pruning(PruningMethod):
         l2_norm = param.pow(2)
         
         # Create a mask based on the L2 norms
-        threshold = torch.quantile(l2_norm.flatten(), amount)
-        mask = l2_norm > threshold
-        
-        # Apply the mask using PyTorch's custom pruning
-        prune.CustomFromMask.apply(module, name, mask)
+        # Handle large tensors by chunking or using a different approach for threshold
+        try:
+            # Using topk is more memory-efficient than quantile for large tensors
+            if param.numel() > 1000000:  # If tensor is very large
+                k = int(param.numel() * amount)
+                if k > 0:
+                    # Get the k smallest values and use the largest of them as threshold
+                    _, indices = torch.topk(l2_norm.flatten(), k, largest=False)
+                    threshold_idx = indices[-1]
+                    threshold = l2_norm.flatten()[threshold_idx]
+                else:
+                    # If k is 0 (amount is very small), set threshold above all values
+                    threshold = l2_norm.max() + 1.0
+            else:
+                threshold = torch.quantile(l2_norm.flatten(), amount)
+            
+            # Create mask (True = keep, False = prune)
+            mask = l2_norm > threshold
+            
+            # Apply the mask using PyTorch's custom pruning
+            prune.CustomFromMask.apply(module, name, mask)
+        except Exception as e:
+            print(f"Error in L2 pruning: {str(e)}")
+            # Fallback to L1 pruning if L2 fails
+            print("Falling back to L1 pruning")
+            L1Pruning().apply(module, name, amount)
 
 
 class RandomPruning(PruningMethod):

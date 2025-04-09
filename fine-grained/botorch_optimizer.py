@@ -218,14 +218,26 @@ class BoTorchOptimizer:
             # LOG: Check if discrete params affect model quality
             self._log_discrete_parameter_effects(X, Y, C)
             
-            # Create acquisition function (Constrained Expected Improvement)
-            acq_func = ConstrainedExpectedImprovement(
-                model=gp,
-                best_f=Y[self.best_idx].item() if self.best_idx >= 0 else 0.0,
-                objective_index=0,
-                constraints=[lambda Z: constraint_gp.posterior(Z).mean],
-                constraint_thresholds=[0.0]  # Constraint should be >= 0
-            )
+            # Create acquisition function
+            # Check BoTorch version for proper acquisition function usage
+            try:
+                # First try with the format in newer versions
+                acq_func = ConstrainedExpectedImprovement(
+                    model=gp,
+                    best_f=Y[self.best_idx].item() if self.best_idx >= 0 else 0.0,
+                    objective_index=0,
+                    constraints=[lambda Z: constraint_gp.posterior(Z).mean],
+                    constraint_thresholds=[0.0]  # Constraint should be >= 0
+                )
+            except TypeError:
+                # Fall back to older version format that doesn't use constraint_thresholds
+                logger.info("Using older BoTorch API format for ConstrainedExpectedImprovement")
+                acq_func = ConstrainedExpectedImprovement(
+                    model=gp,
+                    best_f=Y[self.best_idx].item() if self.best_idx >= 0 else 0.0,
+                    objective_index=0,
+                    constraints=[lambda Z: constraint_gp.posterior(Z).mean - 0.0]  # Constraint - threshold
+                )
             
             # Optimize acquisition function
             new_x, _ = optimize_acqf(
